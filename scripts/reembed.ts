@@ -41,7 +41,7 @@ async function reembed(): Promise<void> {
     await Promise.all(
       batch.map(async (doc) => {
         const { embedding } = await embed({
-          model: google.textEmbeddingModel(EMBEDDING_MODEL),
+          model: google.embeddingModel(EMBEDDING_MODEL),
           value: doc.content,
         });
         const { error: updateError } = await supabase

@@ -17,7 +17,7 @@ export const knowledgeBaseTool = tool({
     console.log(`[Tool:KB] Received query: ${query}`);
     try {
       const { embedding } = await embed({
-        model: google.textEmbeddingModel(EMBEDDING_MODEL_NAME),
+        model: google.embeddingModel(EMBEDDING_MODEL_NAME),
         value: query,
       });
       console.log('[Tool:KB] Generated query embedding.');
