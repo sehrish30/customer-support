@@ -3,6 +3,7 @@ import { groq } from './config.js';
 export const SIMILARITY_MATCH_COUNT = 3 as const;
 export const ANSWERING_MODEL = 'llama-3.3-70b-versatile' as const;
 export const EMBEDDING_MODEL_NAME = 'gemini-embedding-001' as const;
+export const EMBEDDING_DIMENSIONS = 1536 as const;
 export const CLASSIFICATION_MODEL = 'llama-3.3-70b-versatile' as const;
 export const aiModel = groq(ANSWERING_MODEL);
 export const KNOWLEDGE_BASE_DESCRIPTION =

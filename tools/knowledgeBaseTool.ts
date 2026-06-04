@@ -1,7 +1,7 @@
 import { tool, embed } from 'ai';
 import { z } from 'zod';
 import { google, supabase } from '../config.js';
-import { SIMILARITY_MATCH_COUNT, EMBEDDING_MODEL_NAME } from '../constants.js';
+import { SIMILARITY_MATCH_COUNT, EMBEDDING_MODEL_NAME, EMBEDDING_DIMENSIONS } from '../constants.js';
 import type { KnowledgeBaseToolOutput, RetrievedDocument } from '../types.js';
 
 export const knowledgeBaseTool = tool({
@@ -19,6 +19,7 @@ export const knowledgeBaseTool = tool({
       const { embedding } = await embed({
         model: google.embeddingModel(EMBEDDING_MODEL_NAME),
         value: query,
+        providerOptions: { google: { outputDimensionality: EMBEDDING_DIMENSIONS } },
       });
       console.log('[Tool:KB] Generated query embedding.');
 

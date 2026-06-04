@@ -15,6 +15,7 @@ const google = createGoogleGenerativeAI({ apiKey: googleApiKey });
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const EMBEDDING_MODEL = 'gemini-embedding-001' as const;
+const EMBEDDING_DIMENSIONS = 1536 as const;
 
 interface Document {
   content: string;
@@ -85,6 +86,11 @@ const documents: Document[] = [
 ];
 
 async function seed(): Promise<void> {
+  console.log('Clearing existing documents...');
+  const { error: deleteError } = await supabase.from('documents').delete().neq('id', '');
+  if (deleteError) throw new Error(`Failed to clear documents: ${deleteError.message}`);
+  console.log('Cleared.\n');
+
   console.log(`Embedding and inserting ${documents.length} documents...\n`);
 
   for (let i = 0; i < documents.length; i++) {
@@ -93,6 +99,7 @@ async function seed(): Promise<void> {
 
     const { embedding } = await embed({
       model: google.embeddingModel(EMBEDDING_MODEL),
+      providerOptions: { google: { outputDimensionality: EMBEDDING_DIMENSIONS } },
       value: doc.content,
     });
 
