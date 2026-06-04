@@ -2,118 +2,169 @@
 
 SupportPilot AI is an agentic customer support assistant that combines:
 
-- Internal knowledge-base retrieval (RAG with Supabase vectors)
-- Tool-calling orchestration
+- Internal knowledge-base retrieval (RAG with Supabase + pgvector)
+- Tool-calling orchestration via the AI SDK
 - Optional web-search grounding for broader or real-time questions
-
-It is designed as a portfolio-ready backend project that demonstrates practical LLM engineering for support workflows.
-
-## Why This Project
-
-Many support assistants fail when they only use one source of truth.
-
-This agent uses a hybrid strategy:
-
-- If the question is product-specific, it retrieves internal docs.
-- If the question needs broader or recent context, it can use web search.
-- If no tool is needed, it responds directly.
 
 ## Stack
 
-- Node.js (ESM)
-- AI SDK (`ai`)
-- OpenAI via `@ai-sdk/openai`
-- Supabase (`@supabase/supabase-js`)
-- Zod (`zod`)
+- Node.js + TypeScript (ESM)
+- AI SDK (`ai`) with Groq (`llama-3.3-70b-versatile`) for text generation
+- Google Gemini (`gemini-embedding-001`) for embeddings
+- Supabase + pgvector for vector storage and similarity search
+- Express for the API server
+- React + Vite for the frontend
 
 ## Project Structure
 
-- `index.js` : demo entrypoint
-- `webSearchRetrievalAgent.js` : main agent orchestration
-- `tools/knowledgeBaseTool.js` : vector retrieval tool
-- `prompts.js` : routing prompt for tool usage
-- `constants.js` : model and KB configuration
-- `config.js` : OpenAI + Supabase clients
+```
+├── server.ts                     # Express API server
+├── webSearchRetrievalAgent.ts    # Main agent orchestration
+├── tools/knowledgeBaseTool.ts    # Vector retrieval tool
+├── prompts.ts                    # System prompt
+├── constants.ts                  # Model and KB configuration
+├── config.ts                     # Groq + Google + Supabase clients
+├── rateLimiter.ts                # Request rate limiter
+├── scripts/
+│   ├── seed.ts                   # Embed and insert knowledge base documents
+│   ├── reembed.ts                # Re-embed existing documents
+│   └── check.ts                  # Verify seeded documents
+└── frontend/                     # React + Vite UI
+```
 
 ## Setup
 
-1. Install dependencies:
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-2. Create your environment variables:
+### 2. Configure environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-3. Fill in your values:
+Fill in your values:
 
-- `OPENAI_API_KEY`
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+```env
+GROQ_API_KEY=             # from console.groq.com (free tier available)
+GOOGLE_GENERATIVE_AI_API_KEY=   # from aistudio.google.com (used for embeddings only)
+SUPABASE_URL=             # from your Supabase project settings
+SUPABASE_SERVICE_ROLE_KEY=      # from your Supabase project settings
+```
 
-4. Start the local app:
+### 3. Set up Supabase
+
+#### Enable pgvector
+
+In your Supabase project, go to **SQL Editor** and run:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+#### Create the documents table
+
+```sql
+CREATE TABLE documents (
+  id bigserial PRIMARY KEY,
+  content text NOT NULL,
+  metadata jsonb,
+  embedding vector(1536)
+);
+```
+
+#### Create the match_documents function
+
+> **Required:** The knowledge base search will not work without this function. Run it once in the Supabase SQL Editor before starting the app.
+
+```sql
+CREATE OR REPLACE FUNCTION match_documents(
+  query_embedding vector(1536),
+  match_count int
+)
+RETURNS TABLE (
+  id bigint,
+  content text,
+  metadata jsonb,
+  similarity float
+)
+LANGUAGE sql STABLE
+AS $$
+  SELECT
+    id,
+    content,
+    metadata,
+    1 - (embedding <=> query_embedding) AS similarity
+  FROM documents
+  ORDER BY embedding <=> query_embedding
+  LIMIT match_count;
+$$;
+```
+
+### 4. Seed the knowledge base
+
+Embeds and inserts sample support documents into Supabase. Re-running this clears and re-seeds from scratch.
 
 ```bash
-npm start
+npx tsx scripts/seed.ts
 ```
 
-5. Open the frontend:
+To verify documents were inserted:
 
-- http://localhost:3000
+```bash
+npx tsx scripts/check.ts
+```
 
-## Frontend + API
+### 5. Start the app
 
-This project now includes a built-in local web UI and API:
+```bash
+npm run dev
+```
 
-- Frontend: `public/index.html`
-- API endpoint: `POST /api/search`
-- Health endpoint: `GET /api/health`
+Open the frontend at **http://localhost:3000**
 
-`POST /api/search` request body:
+## API
+
+### `POST /api/search`
+
+```json
+{ "query": "How do I reset my password?" }
+```
+
+Response:
 
 ```json
 {
-	"query": "How do I upgrade my subscription plan?"
+  "answer": "...",
+  "sources": [],
+  "toolUsed": "knowledgeBaseSearch"
 }
 ```
 
-Response shape:
+### `POST /api/search/stream`
+
+Same request body — streams the response as newline-delimited JSON events.
+
+### `GET /api/health`
 
 ```json
-{
-	"answer": "...",
-	"sources": [],
-	"toolUsed": "knowledgeBaseSearch"
-}
+{ "ok": true, "service": "supportpilot-api" }
 ```
 
 ## Customizing For Your Own Brand
 
-To fully turn this into your own portfolio project:
+1. Update `KNOWLEDGE_BASE_DESCRIPTION` in `constants.ts` with your product name.
+2. Edit the documents array in `scripts/seed.ts` with your own support content.
+3. Tune the system prompt in `prompts.ts` for your tone and policy.
+4. Re-run `npx tsx scripts/seed.ts` to apply changes.
 
-1. Update the product description in `constants.js`.
-2. Replace your vector data source in Supabase with your own support docs.
-3. Tune the prompt in `prompts.js` for your support policy and tone.
-4. Update sample queries in `index.js` to match your product domain.
+## Example Questions
 
-## Example Use Cases
-
-- Product FAQ assistant
-- Developer platform support assistant
-- Learning platform helpdesk copilot
-- Internal support triage prototype
-
-## Notes
-
-- The app is served locally from Express on port `3000` by default.
-- Knowledge-base retrieval depends on a Supabase RPC named `match_documents`.
-
-## Portfolio Positioning
-
-You can present this project as:
-
-"Built an agentic support system that routes between internal RAG and tool-based retrieval to improve support response quality and trustworthiness."
+- "How do I reset my password?"
+- "What are your pricing plans?"
+- "Can I get a refund?"
+- "How do I download courses for offline access?"
+- "Does the platform integrate with Slack?"
