@@ -1,7 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { embed } from 'ai';
-import {openai, supabase} from "../config.js"
+import {google, supabase} from "../config.js"
 import {
   SIMILARITY_MATCH_COUNT,
   EMBEDDING_MODEL_NAME,
@@ -22,7 +22,7 @@ export const knowledgeBaseTool = tool({
     try {
       // 1. Embed the query
       const { embedding } = await embed({
-        model: openai.embedding(EMBEDDING_MODEL_NAME),
+        model: google.textEmbeddingModel(EMBEDDING_MODEL_NAME),
         value: query,
       });
       console.log('[Tool:KB] Generated query embedding.');

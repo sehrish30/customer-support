@@ -68,6 +68,14 @@ app.post('/api/search/stream', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`SupportPilot running at http://localhost:${PORT}`);
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\nError: Port ${PORT} is already in use.\nRun: kill $(lsof -ti:${PORT})\n`);
+    process.exit(1);
+  }
+  throw err;
 });

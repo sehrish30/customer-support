@@ -9,7 +9,7 @@
         "cli": "node index.js"
     },
     "dependencies": {
-        "@ai-sdk/openai": "^3.0.0",
+        "@ai-sdk/google": "^3.0.80",
         "@supabase/supabase-js": "^2.56.1",
         "ai": "^6.0.0",
         "dotenv": "^17.4.2",

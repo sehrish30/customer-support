@@ -1,11 +1,13 @@
 import { generateText, stepCountIs, streamText } from "ai";
 import { KNOWLEDGE_BASE_DESCRIPTION, ANSWERING_MODEL } from "./constants.js";
 import { getRetrievalWebSearchPrompt } from "./prompts.js";
-import { openai } from "./config.js";
+import { google } from "./config.js";
 import { knowledgeBaseTool } from "./tools/knowledgeBaseTool.js";
+import { withRateLimit } from "./rateLimiter.js";
 
 const TOOL_CALLING_MODEL = ANSWERING_MODEL;
-const MAX_TOOL_STEPS = 3; // Allow LLM to call tool then generate response
+// Reduced from 3 → 2: each step = 1 Gemini API call; fewer steps = less quota burn
+const MAX_TOOL_STEPS = 2;
 
 const PROVIDER_SOURCE_TOOL_NAME = "web_search_preview";
 
@@ -36,7 +38,7 @@ const TOOL_REGISTRY = {
 
 function getAgentConfig(question) {
   return {
-    model: openai(TOOL_CALLING_MODEL),
+    model: google(TOOL_CALLING_MODEL),
     system: getRetrievalWebSearchPrompt(KNOWLEDGE_BASE_DESCRIPTION),
     prompt: question,
     tools: {
@@ -115,7 +117,7 @@ export async function webSearchRetrievalAgent(question) {
   console.log(`[ToolBased] Received question: ${question}`);
 
   try {
-    const result = await generateText(getAgentConfig(question));
+    const result = await withRateLimit(() => generateText(getAgentConfig(question)));
 
     console.log("[ToolBased] generateText finished.");
     return extractAgentResponse(result);
@@ -136,14 +138,14 @@ export async function streamWebSearchRetrievalAgent(question, handlers = {}) {
   console.log(`[ToolBased] Streaming question: ${question}`);
 
   const { onTextDelta } = handlers;
-  const result = streamText({
+  const result = await withRateLimit(() => streamText({
     ...getAgentConfig(question),
     onChunk: async ({ chunk }) => {
       if (chunk.type === "text-delta") {
         await onTextDelta?.(chunk.textDelta);
       }
     },
-  });
+  }));
 
   await result.consumeStream();
 
