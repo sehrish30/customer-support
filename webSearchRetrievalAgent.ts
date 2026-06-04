@@ -3,7 +3,7 @@ import type { StepResult, ToolSet } from 'ai';
 import type { LanguageModelV3Source } from '@ai-sdk/provider';
 import { KNOWLEDGE_BASE_DESCRIPTION, ANSWERING_MODEL } from './constants.js';
 import { getRetrievalWebSearchPrompt } from './prompts.js';
-import { google } from './config.js';
+import { groq } from './config.js';
 import { knowledgeBaseTool } from './tools/knowledgeBaseTool.js';
 import { withRateLimit } from './rateLimiter.js';
 import type {
@@ -55,7 +55,7 @@ const TOOL_REGISTRY: Record<keyof KBTools, KBToolRegistryEntry> = {
 
 function getAgentConfig(question: string) {
   return {
-    model: google(TOOL_CALLING_MODEL),
+    model: groq(TOOL_CALLING_MODEL),
     system: getRetrievalWebSearchPrompt(KNOWLEDGE_BASE_DESCRIPTION),
     prompt: question,
     tools: { knowledgeBaseSearch: knowledgeBaseTool } satisfies KBTools & ToolSet,

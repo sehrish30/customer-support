@@ -1,5 +1,5 @@
-// Gemini free tier: 15 requests/min. We cap at 12 to leave a buffer.
-const MAX_REQUESTS_PER_MINUTE = 12;
+// Groq free tier: 30 requests/min. We cap at 25 to leave a buffer.
+const MAX_REQUESTS_PER_MINUTE = 25;
 const WINDOW_MS = 60_000;
 
 const timestamps: number[] = [];

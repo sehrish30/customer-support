@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createGroq } from '@ai-sdk/groq';
 import { createClient } from '@supabase/supabase-js';
 
 const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -7,7 +8,13 @@ if (!googleApiKey) {
   throw new Error('Missing GOOGLE_GENERATIVE_AI_API_KEY environment variable');
 }
 
+const groqApiKey = process.env.GROQ_API_KEY;
+if (!groqApiKey) {
+  throw new Error('Missing GROQ_API_KEY environment variable');
+}
+
 export const google = createGoogleGenerativeAI({ apiKey: googleApiKey });
+export const groq = createGroq({ apiKey: groqApiKey });
 
 const supabasePrivateKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!supabasePrivateKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY is missing or invalid');
