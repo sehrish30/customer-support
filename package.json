@@ -1,0 +1,19 @@
+{
+    "name": "supportpilot-agentic-assistant",
+    "version": "1.0.0",
+    "description": "Portfolio project: a hybrid support assistant that combines internal knowledge base retrieval with live web search.",
+    "type": "module",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "node server.js",
+        "cli": "node index.js"
+    },
+    "dependencies": {
+        "@ai-sdk/openai": "^3.0.0",
+        "@supabase/supabase-js": "^2.56.1",
+        "ai": "^6.0.0",
+        "dotenv": "^17.4.2",
+        "express": "^5.2.1",
+        "zod": "^4.1.5"
+    }
+}
