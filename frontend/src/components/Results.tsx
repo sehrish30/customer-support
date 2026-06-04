@@ -1,6 +1,13 @@
-import { SourceItem } from './SourceItem';
+import type { AppSource, SearchStatus } from '../types.js';
+import { SourceItem } from './SourceItem.js';
 
-export function Results({ answer, sources, status }) {
+interface ResultsProps {
+  answer: string;
+  sources: AppSource[] | null;
+  status: SearchStatus;
+}
+
+export function Results({ answer, sources, status }: ResultsProps): React.JSX.Element {
   const hasAnswer = answer && answer.trim();
   const hasSources = Array.isArray(sources) && sources.length > 0;
 

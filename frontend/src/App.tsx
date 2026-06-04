@@ -1,8 +1,8 @@
-import { useSearch } from './hooks/useSearch';
-import { SearchForm } from './components/SearchForm';
-import { Results } from './components/Results';
+import { useSearch } from './hooks/useSearch.js';
+import { SearchForm } from './components/SearchForm.js';
+import { Results } from './components/Results.js';
 
-export default function App() {
+export default function App(): React.JSX.Element {
   const { answer, sources, status, isLoading, runSearch } = useSearch();
 
   return (

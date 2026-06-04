@@ -1,9 +1,14 @@
 import { useRef } from 'react';
 
-export function SearchForm({ onSubmit, isLoading }) {
-  const textareaRef = useRef(null);
+interface SearchFormProps {
+  onSubmit: (query: string) => void;
+  isLoading: boolean;
+}
 
-  function handleSubmit(e) {
+export function SearchForm({ onSubmit, isLoading }: SearchFormProps): React.JSX.Element {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>): void {
     e.preventDefault();
     const query = textareaRef.current?.value.trim();
     if (!query) return;

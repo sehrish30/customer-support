@@ -4,9 +4,11 @@
     "description": "Portfolio project: a hybrid support assistant that combines internal knowledge base retrieval with live web search.",
     "type": "module",
     "scripts": {
-        "start": "node server.js",
-        "dev": "node server.js",
-        "cli": "node index.js"
+        "start": "tsx server.ts",
+        "dev": "tsx server.ts",
+        "cli": "tsx index.ts",
+        "typecheck": "tsc --noEmit",
+        "build": "tsc"
     },
     "dependencies": {
         "@ai-sdk/google": "^3.0.80",
@@ -15,5 +17,11 @@
         "dotenv": "^17.4.2",
         "express": "^5.2.1",
         "zod": "^4.1.5"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.6",
+        "@types/node": "^25.9.1",
+        "tsx": "^4.22.4",
+        "typescript": "^6.0.3"
     }
 }

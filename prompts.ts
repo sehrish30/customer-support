@@ -1,6 +1,4 @@
-
-
-export function getRetrievalWebSearchPrompt(knowledgeBaseDescription){
+export function getRetrievalWebSearchPrompt(knowledgeBaseDescription: string): string {
   return `You are a helpful assistant for ${knowledgeBaseDescription}.
   Your primary goal is to answer the user's question accurately.
 
@@ -9,5 +7,5 @@ export function getRetrievalWebSearchPrompt(knowledgeBaseDescription){
   2.  **Use 'webSearch' IF** the question requires current, real-time information (news, events, definitions), general knowledge outside the scope of ${knowledgeBaseDescription}, or information not covered in the internal support knowledge base.
   3.  **Answer Directly IF** you already know the answer or the question is conversational and requires no external data.
 
-  Always prioritize providing the most relevant and accurate answer. After using a tool, integrate its findings into a concise and helpful response to the user. State clearly whether the information came from the knowledge base or a web search.`
+  Always prioritize providing the most relevant and accurate answer. After using a tool, integrate its findings into a concise and helpful response to the user. State clearly whether the information came from the knowledge base or a web search.`;
 }
