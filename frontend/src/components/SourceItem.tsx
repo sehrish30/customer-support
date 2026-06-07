@@ -19,12 +19,20 @@ export function SourceItem({ source }: SourceItemProps): React.JSX.Element {
   }
 
   const articleUrl = `/article/${encodeURIComponent(source.metadata.topic)}`;
+  const pct = source.similarity * 100;
+  const tone = pct >= 70 ? 'high' : pct >= 45 ? 'mid' : 'low';
 
   return (
     <li className="source-item">
       <p className="source-type">Knowledge Base</p>
       <p className="source-content">{source.content || 'No content available.'}</p>
-      <p className="source-meta">{`Similarity: ${(source.similarity * 100).toFixed(1)}%`}</p>
+      <div className="similarity-row">
+        <span className="similarity-label">Similarity</span>
+        <div className="similarity-bar-track">
+          <div className="similarity-bar-fill" data-tone={tone} style={{ width: `${pct.toFixed(1)}%` }} />
+        </div>
+        <span className="similarity-pct" data-tone={tone}>{pct.toFixed(1)}%</span>
+      </div>
       <a href={articleUrl} target="_blank" rel="noopener noreferrer">
         View Article ↗
       </a>
