@@ -16,6 +16,10 @@ if (!groqApiKey) {
 export const google = createGoogleGenerativeAI({ apiKey: googleApiKey });
 export const groq = createGroq({ apiKey: groqApiKey });
 
+if (!process.env.TAVILY_API_KEY) {
+  throw new Error('Missing TAVILY_API_KEY environment variable');
+}
+
 const supabasePrivateKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!supabasePrivateKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY is missing or invalid');
 

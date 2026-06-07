@@ -140,6 +140,28 @@ button:disabled {
   gap: 10px;
 }
 
+.results-head-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-clear {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 5px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.btn-clear:hover {
+  color: var(--error);
+  border-color: var(--error);
+  transform: translateY(-1px);
+}
+
 .pill {
   display: inline-flex;
   align-items: center;

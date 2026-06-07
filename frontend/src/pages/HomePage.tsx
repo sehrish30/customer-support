@@ -3,7 +3,7 @@ import { SearchForm } from '../components/SearchForm.js';
 import { Results } from '../components/Results.js';
 
 export default function HomePage(): React.JSX.Element {
-  const { answer, sources, status, isLoading, runSearch } = useSearch();
+  const { answer, sources, status, isLoading, runSearch, clearSession } = useSearch();
 
   return (
     <>
@@ -20,7 +20,7 @@ export default function HomePage(): React.JSX.Element {
         </header>
 
         <SearchForm onSubmit={runSearch} isLoading={isLoading} />
-        <Results answer={answer} sources={sources} status={status} />
+        <Results answer={answer} sources={sources} status={status} onClear={clearSession} />
       </main>
     </>
   );

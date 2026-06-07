@@ -7,6 +7,7 @@ export interface UseSearchReturn {
   status: SearchStatus;
   isLoading: boolean;
   runSearch: (query: string) => Promise<void>;
+  clearSession: () => void;
 }
 
 export function useSearch(): UseSearchReturn {
@@ -14,6 +15,12 @@ export function useSearch(): UseSearchReturn {
   const [sources, setSources] = useState<AppSource[] | null>(null);
   const [status, setStatus] = useState<SearchStatus>({ label: 'Idle', tone: 'idle' });
   const [isLoading, setIsLoading] = useState(false);
+
+  const clearSession = useCallback(() => {
+    setAnswer('');
+    setSources(null);
+    setStatus({ label: 'Idle', tone: 'idle' });
+  }, []);
 
   const runSearch = useCallback(async (query: string): Promise<void> => {
     setIsLoading(true);
@@ -54,7 +61,7 @@ export function useSearch(): UseSearchReturn {
     }
   }, []);
 
-  return { answer, sources, status, isLoading, runSearch };
+  return { answer, sources, status, isLoading, runSearch, clearSession };
 }
 
 interface StreamCallbacks {

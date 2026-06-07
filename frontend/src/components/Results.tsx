@@ -5,19 +5,28 @@ interface ResultsProps {
   answer: string;
   sources: AppSource[] | null;
   status: SearchStatus;
+  onClear: () => void;
 }
 
-export function Results({ answer, sources, status }: ResultsProps): React.JSX.Element {
+export function Results({ answer, sources, status, onClear }: ResultsProps): React.JSX.Element {
   const hasAnswer = answer && answer.trim();
   const hasSources = Array.isArray(sources) && sources.length > 0;
+  const hasContent = Boolean(hasAnswer) || hasSources;
 
   return (
     <section className="card results" aria-live="polite">
       <div className="results-head">
         <h2>Answer</h2>
-        <span className="pill" data-tone={status.tone}>
-          {status.label}
-        </span>
+        <div className="results-head-right">
+          {hasContent && (
+            <button type="button" className="btn-clear" onClick={onClear}>
+              Clear
+            </button>
+          )}
+          <span className="pill" data-tone={status.tone}>
+            {status.label}
+          </span>
+        </div>
       </div>
 
       <p className={`answer${hasAnswer ? '' : ' muted'}`}>

@@ -8,3 +8,6 @@ export const CLASSIFICATION_MODEL = 'llama-3.3-70b-versatile' as const;
 export const aiModel = groq(ANSWERING_MODEL);
 export const KNOWLEDGE_BASE_DESCRIPTION =
   'Acme Learning Hub, an online learning and developer community platform' as const;
+export const WEB_SEARCH_MAX_RESULTS = 3 as const;
+// If the best KB similarity score is below this, also run web search
+export const KB_SUFFICIENCY_THRESHOLD = 0.45 as const;
