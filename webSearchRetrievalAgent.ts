@@ -15,7 +15,6 @@ import type {
   WebSource,
 } from './types.js';
 
-const TOOL_CALLING_MODEL = ANSWERING_MODEL;
 const MAX_TOOL_STEPS = 2;
 const PROVIDER_SOURCE_TOOL_NAME = 'web_search_preview';
 
@@ -29,7 +28,7 @@ interface KBToolRegistryEntry {
 const TOOL_REGISTRY: Record<keyof KBTools, KBToolRegistryEntry> = {
   knowledgeBaseSearch: {
     label: 'knowledge base',
-    extractSources: (output) => {
+    extractSources: (output): KnowledgeBaseSource[] => {
       if (!output) return [];
 
       if ('retrievedDocuments' in output) {
@@ -42,12 +41,8 @@ const TOOL_REGISTRY: Record<keyof KBTools, KBToolRegistryEntry> = {
         }));
       }
 
-      if ('info' in output) {
-        console.log('[ToolBased] KB tool returned info:', output.info);
-      } else if ('error' in output) {
-        console.warn('[ToolBased] KB tool returned an error:', output.error);
-      }
-
+      if ('info' in output) console.log('[ToolBased] KB tool returned info:', output.info);
+      if ('error' in output) console.warn('[ToolBased] KB tool error:', output.error);
       return [];
     },
   },
@@ -55,7 +50,7 @@ const TOOL_REGISTRY: Record<keyof KBTools, KBToolRegistryEntry> = {
 
 function getAgentConfig(question: string) {
   return {
-    model: groq(TOOL_CALLING_MODEL),
+    model: groq(ANSWERING_MODEL),
     system: getRetrievalWebSearchPrompt(KNOWLEDGE_BASE_DESCRIPTION),
     prompt: question,
     tools: { knowledgeBaseSearch: knowledgeBaseTool } satisfies KBTools & ToolSet,
@@ -75,9 +70,11 @@ function extractAgentResponse({ text, sources: rawSources, steps }: AgentRawResu
   const toolsUsedSet = new Set<string>();
 
   if (rawSources.length > 0) {
-    console.log('[ToolBased] Web search sources found.');
     const webSources: WebSource[] = rawSources
-      .filter((s): s is Extract<LanguageModelV3Source, { sourceType: 'url' }> => s.sourceType === 'url')
+      .filter(
+        (s): s is Extract<LanguageModelV3Source, { sourceType: 'url' }> =>
+          s.sourceType === 'url',
+      )
       .map((s) => ({ type: 'web' as const, title: s.title, url: s.url }));
     collectedSources.push(...webSources);
     toolsUsedSet.add(PROVIDER_SOURCE_TOOL_NAME);
@@ -96,13 +93,12 @@ function extractAgentResponse({ text, sources: rawSources, steps }: AgentRawResu
       toolsUsedSet.add(toolName);
 
       if (!(toolName in TOOL_REGISTRY)) {
-        console.log(`[ToolBased] No registry entry configured for tool: ${toolName}`);
+        console.log(`[ToolBased] No registry entry for tool: ${toolName}`);
         continue;
       }
 
       const registryEntry = TOOL_REGISTRY[toolName as keyof KBTools];
       const toolResult = toolResultByCallId.get(toolCall.toolCallId);
-
       const output =
         toolResult && !toolResult.dynamic
           ? (toolResult.output as KnowledgeBaseToolOutput)
@@ -146,8 +142,7 @@ export async function webSearchRetrievalAgent(question: string): Promise<AgentRe
   } catch (err) {
     console.error('[ToolBased] Error in RAG process:', err);
     return {
-      answer:
-        'I encountered an error while processing your request using tool calling. Please try again later.',
+      answer: 'I encountered an error while processing your request. Please try again later.',
       sources: null,
       toolUsed: null,
       toolsUsed: [],

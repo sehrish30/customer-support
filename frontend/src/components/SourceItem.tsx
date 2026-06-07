@@ -12,19 +12,22 @@ export function SourceItem({ source }: SourceItemProps): React.JSX.Element {
         <p className="source-title">{source.title ?? 'Web Source'}</p>
         <p className="source-content">{source.snippet ?? 'No snippet provided.'}</p>
         <a href={source.url} target="_blank" rel="noopener noreferrer">
-          Open Source
+          Open Source ↗
         </a>
       </li>
     );
   }
 
+  const articleUrl = `/article/${encodeURIComponent(source.metadata.topic)}`;
+
   return (
     <li className="source-item">
       <p className="source-type">Knowledge Base</p>
       <p className="source-content">{source.content || 'No content available.'}</p>
-      <p className="source-meta">
-        {`Similarity: ${source.similarity.toFixed(4)}`}
-      </p>
+      <p className="source-meta">{`Similarity: ${source.similarity.toFixed(4)}`}</p>
+      <a href={articleUrl} target="_blank" rel="noopener noreferrer">
+        View Article ↗
+      </a>
     </li>
   );
 }

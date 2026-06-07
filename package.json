@@ -7,6 +7,8 @@
         "start": "tsx server.ts",
         "dev": "tsx server.ts",
         "cli": "tsx index.ts",
+        "seed": "tsx scripts/seed.ts",
+        "reembed": "tsx scripts/reembed.ts",
         "typecheck": "tsc --noEmit",
         "build": "tsc"
     },

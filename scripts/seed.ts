@@ -87,7 +87,7 @@ const documents: Document[] = [
 
 async function seed(): Promise<void> {
   console.log('Clearing existing documents...');
-  const { error: deleteError } = await supabase.from('documents').delete().neq('id', '');
+  const { error: deleteError } = await supabase.from('documents').delete().gt('id', 0);
   if (deleteError) throw new Error(`Failed to clear documents: ${deleteError.message}`);
   console.log('Cleared.\n');
 

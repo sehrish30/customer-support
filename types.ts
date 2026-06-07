@@ -1,6 +1,11 @@
+export interface ArticleMetadata {
+  category: string;
+  topic: string;
+}
+
 export interface RetrievedDocument {
   content: string;
-  metadata: Record<string, string | number | boolean | null>;
+  metadata: ArticleMetadata;
   similarity: number;
 }
 
@@ -19,7 +24,7 @@ export interface WebSource {
 export interface KnowledgeBaseSource {
   type: 'knowledgeBase';
   content: string;
-  metadata: Record<string, string | number | boolean | null>;
+  metadata: ArticleMetadata;
   similarity: number;
 }
 

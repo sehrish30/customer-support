@@ -5,11 +5,22 @@ export interface WebSource {
   snippet?: string;
 }
 
+export interface ArticleMetadata {
+  category: string;
+  topic: string;
+}
+
 export interface KnowledgeBaseSource {
   type: 'knowledgeBase';
   content: string;
-  metadata: Record<string, string | number | boolean | null>;
+  metadata: ArticleMetadata;
   similarity: number;
+}
+
+export interface Article {
+  id: string;
+  content: string;
+  metadata: ArticleMetadata;
 }
 
 export type AppSource = WebSource | KnowledgeBaseSource;

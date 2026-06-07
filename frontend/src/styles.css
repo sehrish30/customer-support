@@ -225,6 +225,64 @@ button:disabled {
   }
 }
 
+.source-item a {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.source-item a:hover {
+  text-decoration: underline;
+}
+
+/* ── Article page ─────────────────────────────────────────── */
+
+.article-nav {
+  margin-bottom: 4px;
+}
+
+.article-nav a {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.article-nav a:hover {
+  text-decoration: underline;
+}
+
+.article-card {
+  max-width: 700px;
+}
+
+.article-header {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.article-header h1 {
+  margin: 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.4rem, 3.5vw, 2rem);
+  line-height: 1.15;
+}
+
+.article-category {
+  width: fit-content;
+  text-transform: capitalize;
+}
+
+.article-body p {
+  line-height: 1.75;
+  color: #353126;
+  margin: 0;
+}
+
 @keyframes riseIn {
   from {
     opacity: 0;
