@@ -24,7 +24,7 @@ export function SourceItem({ source }: SourceItemProps): React.JSX.Element {
     <li className="source-item">
       <p className="source-type">Knowledge Base</p>
       <p className="source-content">{source.content || 'No content available.'}</p>
-      <p className="source-meta">{`Similarity: ${source.similarity.toFixed(4)}`}</p>
+      <p className="source-meta">{`Similarity: ${(source.similarity * 100).toFixed(1)}%`}</p>
       <a href={articleUrl} target="_blank" rel="noopener noreferrer">
         View Article ↗
       </a>
