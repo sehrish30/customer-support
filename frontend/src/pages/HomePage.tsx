@@ -1,9 +1,10 @@
-import { useSearch } from '../hooks/useSearch.js';
-import { SearchForm } from '../components/SearchForm.js';
-import { Results } from '../components/Results.js';
+import { useSearch } from "../hooks/useSearch.js";
+import { SearchForm } from "../components/SearchForm.js";
+import { Results } from "../components/Results.js";
 
 export default function HomePage(): React.JSX.Element {
-  const { answer, sources, status, isLoading, runSearch, clearSession } = useSearch();
+  const { answer, sources, status, isLoading, runSearch, clearSession } =
+    useSearch();
 
   return (
     <>
@@ -12,15 +13,20 @@ export default function HomePage(): React.JSX.Element {
 
       <main className="app-shell">
         <header className="hero">
-          <p className="eyebrow">Portfolio Demo</p>
           <h1>SupportPilot AI</h1>
           <p className="subtitle">
-            Hybrid support assistant powered by knowledge-base retrieval and agentic LLM routing.
+            Hybrid support assistant powered by knowledge-base retrieval and
+            agentic LLM routing.
           </p>
         </header>
 
         <SearchForm onSubmit={runSearch} isLoading={isLoading} />
-        <Results answer={answer} sources={sources} status={status} onClear={clearSession} />
+        <Results
+          answer={answer}
+          sources={sources}
+          status={status}
+          onClear={clearSession}
+        />
       </main>
     </>
   );
