@@ -16,7 +16,7 @@ export function Results({ answer, sources, status, onClear }: ResultsProps): Rea
   return (
     <section className="card results" aria-live="polite">
       <div className="results-head">
-        <h2>Answer</h2>
+        <h2>AI Insight</h2>
         <div className="results-head-right">
           {hasContent && (
             <button type="button" className="btn-clear" onClick={onClear}>
