@@ -104,7 +104,7 @@ async function retrieve(
 
   if (route === "web") {
     const [webSources, githubSources] = await Promise.all([searchWeb(question), githubPromise]);
-    sources.push(...webSources, ...githubSources);
+    sources.push(...githubSources, ...webSources);
     recordToolsUsed(toolsUsed, { webSources, githubSources });
     return { sources, toolsUsed };
   }
@@ -116,18 +116,17 @@ async function retrieve(
       githubPromise,
     ]);
     const kbSources = toKbSources(kbDocs);
-    sources.push(...kbSources, ...webSources, ...githubSources);
+    sources.push(...githubSources, ...kbSources, ...webSources);
     recordToolsUsed(toolsUsed, { kbSources, webSources, githubSources });
     return { sources, toolsUsed };
   }
 
   const [kbDocs, githubSources] = await Promise.all([searchKnowledgeBase(question), githubPromise]);
   const kbSources = toKbSources(kbDocs);
-  sources.push(...kbSources);
   recordToolsUsed(toolsUsed, { kbSources, githubSources });
 
   if (route === "kb") {
-    sources.push(...githubSources);
+    sources.push(...githubSources, ...kbSources);
     return { sources, toolsUsed };
   }
 
@@ -136,11 +135,11 @@ async function retrieve(
   if (bestKBScore < KB_SUFFICIENCY_THRESHOLD) {
     console.log(`[Agent] KB score ${bestKBScore.toFixed(2)} < threshold — running web search.`);
     const webSources = await searchWeb(question);
-    sources.push(...webSources, ...githubSources);
+    sources.push(...githubSources, ...kbSources, ...webSources);
     recordToolsUsed(toolsUsed, { webSources });
   } else {
     console.log(`[Agent] KB score ${bestKBScore.toFixed(2)} sufficient — skipping web search.`);
-    sources.push(...githubSources);
+    sources.push(...githubSources, ...kbSources);
   }
 
   return { sources, toolsUsed };
