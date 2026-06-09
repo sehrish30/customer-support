@@ -18,6 +18,22 @@ export function SourceItem({ source }: SourceItemProps): React.JSX.Element {
     );
   }
 
+  if (source.type === 'github') {
+    return (
+      <li className="source-item source-item--github">
+        <p className="source-type">
+          GitHub Issue{' '}
+          <span className={`issue-state issue-state--${source.state}`}>{source.state}</span>
+        </p>
+        <p className="source-title">#{source.number} — {source.title}</p>
+        {source.body && <p className="source-content">{source.body}</p>}
+        <a href={source.url} target="_blank" rel="noopener noreferrer">
+          View on GitHub ↗
+        </a>
+      </li>
+    );
+  }
+
   const articleUrl = `/article/${encodeURIComponent(source.metadata.topic)}`;
   const pct = source.similarity * 100;
   const tone = pct >= 70 ? 'high' : pct >= 45 ? 'mid' : 'low';

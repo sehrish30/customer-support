@@ -301,6 +301,72 @@ button:disabled {
   text-decoration: underline;
 }
 
+/* GitHub source */
+.source-item--github {
+  border-color: #d0d7de;
+  background: #f6f8fa;
+}
+
+.issue-state {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.issue-state--open  { background: #dafbe1; color: #1a7f37; }
+.issue-state--closed { background: #f3e4f8; color: #7d3198; }
+
+/* Memory badge */
+.results-head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pill--memory {
+  background: #eef2ff;
+  color: #4338ca;
+  border-color: #c7d2fe;
+  font-size: 0.78rem;
+}
+
+/* Report bug row */
+.report-bug-row {
+  margin: 8px 0 14px;
+}
+
+.btn-report-bug {
+  background: transparent;
+  color: #1a7f37;
+  border: 1px solid #b7dfc4;
+  padding: 5px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.btn-report-bug:hover {
+  background: #dafbe1;
+  transform: translateY(-1px);
+}
+
+.issue-created-link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a7f37;
+  text-decoration: none;
+}
+
+.issue-created-link:hover {
+  text-decoration: underline;
+}
+
 /* ── Article page ─────────────────────────────────────────── */
 
 .article-nav {

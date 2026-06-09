@@ -23,7 +23,16 @@ export interface Article {
   metadata: ArticleMetadata;
 }
 
-export type AppSource = WebSource | KnowledgeBaseSource;
+export interface GitHubSource {
+  type: 'github';
+  number: number;
+  title: string;
+  url: string;
+  state: 'open' | 'closed';
+  body: string;
+}
+
+export type AppSource = WebSource | KnowledgeBaseSource | GitHubSource;
 
 export type StatusTone = 'idle' | 'loading' | 'success' | 'error';
 
@@ -40,4 +49,6 @@ export interface StreamEvent {
   toolUsed?: string | null;
   toolsUsed?: string[];
   error?: string;
+  sessionId?: string;
+  hasMemory?: boolean;
 }

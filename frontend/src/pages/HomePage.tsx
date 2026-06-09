@@ -3,7 +3,7 @@ import { SearchForm } from "../components/SearchForm.js";
 import { Results } from "../components/Results.js";
 
 export default function HomePage(): React.JSX.Element {
-  const { answer, sources, status, isLoading, runSearch, clearSession } =
+  const { answer, sources, status, isLoading, hasMemory, runSearch, clearSession, createGitHubIssue } =
     useSearch();
 
   return (
@@ -25,7 +25,9 @@ export default function HomePage(): React.JSX.Element {
           answer={answer}
           sources={sources}
           status={status}
+          hasMemory={hasMemory}
           onClear={clearSession}
+          onCreateIssue={createGitHubIssue}
         />
       </main>
     </>

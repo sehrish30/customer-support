@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { AppSource, SearchStatus, StreamEvent } from '../types.js';
 
 export interface UseSearchReturn {
@@ -6,20 +6,34 @@ export interface UseSearchReturn {
   sources: AppSource[] | null;
   status: SearchStatus;
   isLoading: boolean;
+  hasMemory: boolean;
+  sessionId: string;
   runSearch: (query: string) => Promise<void>;
   clearSession: () => void;
+  createGitHubIssue: (title: string, body: string) => Promise<{ url: string; number: number } | null>;
+}
+
+function generateSessionId(): string {
+  return typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
 export function useSearch(): UseSearchReturn {
+  const sessionIdRef = useRef<string>(generateSessionId());
   const [answer, setAnswer] = useState('');
   const [sources, setSources] = useState<AppSource[] | null>(null);
   const [status, setStatus] = useState<SearchStatus>({ label: 'Idle', tone: 'idle' });
   const [isLoading, setIsLoading] = useState(false);
+  const [hasMemory, setHasMemory] = useState(false);
 
   const clearSession = useCallback(() => {
+    void fetch(`/api/session/${sessionIdRef.current}`, { method: 'DELETE' }).catch(() => undefined);
+    sessionIdRef.current = generateSessionId();
     setAnswer('');
     setSources(null);
     setStatus({ label: 'Idle', tone: 'idle' });
+    setHasMemory(false);
   }, []);
 
   const runSearch = useCallback(async (query: string): Promise<void> => {
@@ -32,7 +46,7 @@ export function useSearch(): UseSearchReturn {
       const response = await fetch('/api/search/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, sessionId: sessionIdRef.current }),
       });
 
       if (!response.ok) {
@@ -45,6 +59,7 @@ export function useSearch(): UseSearchReturn {
         onDone: (event) => {
           setAnswer((prev) => prev.trim() || event.answer || 'No answer generated.');
           setSources(event.sources ?? null);
+          setHasMemory(event.hasMemory ?? false);
           setStatus({ label: 'Complete', tone: 'success' });
         },
         onError: (event) => {
@@ -61,7 +76,34 @@ export function useSearch(): UseSearchReturn {
     }
   }, []);
 
-  return { answer, sources, status, isLoading, runSearch, clearSession };
+  const createGitHubIssue = useCallback(async (
+    title: string,
+    body: string,
+  ): Promise<{ url: string; number: number } | null> => {
+    try {
+      const response = await fetch('/api/github/create-issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, body }),
+      });
+      if (!response.ok) return null;
+      return await response.json() as { url: string; number: number };
+    } catch {
+      return null;
+    }
+  }, []);
+
+  return {
+    answer,
+    sources,
+    status,
+    isLoading,
+    hasMemory,
+    sessionId: sessionIdRef.current,
+    runSearch,
+    clearSession,
+    createGitHubIssue,
+  };
 }
 
 interface StreamCallbacks {

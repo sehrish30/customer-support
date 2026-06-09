@@ -1,5 +1,7 @@
 import express, { type Request, type Response } from 'express';
 import { streamWebSearchRetrievalAgent, webSearchRetrievalAgent } from './webSearchRetrievalAgent.js';
+import { createGitHubIssue, isGitHubConfigured } from './tools/githubMcpTool.js';
+import { clearSession } from './tools/memoryTool.js';
 import type { StreamEvent } from './types.js';
 import { supabase } from './config.js';
 
@@ -9,12 +11,13 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 app.use(express.json());
 
 app.get('/api/health', (_req: Request, res: Response) => {
-  res.json({ ok: true, service: 'supportpilot-api' });
+  res.json({ ok: true, service: 'supportpilot-api', github: isGitHubConfigured() });
 });
 
 app.post('/api/search', async (req: Request, res: Response) => {
-  const body = req.body as { query?: string } | undefined;
+  const body = req.body as { query?: string; sessionId?: string } | undefined;
   const query = body?.query;
+  const sessionId = typeof body?.sessionId === 'string' ? body.sessionId : undefined;
 
   if (!query || typeof query !== 'string' || !query.trim()) {
     res.status(400).json({ error: 'A non-empty query string is required.' });
@@ -22,7 +25,7 @@ app.post('/api/search', async (req: Request, res: Response) => {
   }
 
   try {
-    const result = await webSearchRetrievalAgent(query.trim());
+    const result = await webSearchRetrievalAgent(query.trim(), { sessionId });
     res.json(result);
   } catch (err) {
     console.error('[API] /api/search failed:', err);
@@ -31,8 +34,9 @@ app.post('/api/search', async (req: Request, res: Response) => {
 });
 
 app.post('/api/search/stream', async (req: Request, res: Response) => {
-  const body = req.body as { query?: string } | undefined;
+  const body = req.body as { query?: string; sessionId?: string } | undefined;
   const query = body?.query;
+  const sessionId = typeof body?.sessionId === 'string' ? body.sessionId : undefined;
 
   if (!query || typeof query !== 'string' || !query.trim()) {
     res.status(400).json({ error: 'A non-empty query string is required.' });
@@ -50,11 +54,11 @@ app.post('/api/search/stream', async (req: Request, res: Response) => {
   writeEvent({ type: 'start' });
 
   try {
-    const result = await streamWebSearchRetrievalAgent(query.trim(), {
-      onTextDelta: async (delta) => {
-        writeEvent({ type: 'text-delta', delta });
-      },
-    });
+    const result = await streamWebSearchRetrievalAgent(
+      query.trim(),
+      { onTextDelta: async (delta) => { writeEvent({ type: 'text-delta', delta }); } },
+      { sessionId },
+    );
 
     writeEvent({ type: 'done', ...result });
     res.end();
@@ -63,6 +67,39 @@ app.post('/api/search/stream', async (req: Request, res: Response) => {
     writeEvent({ type: 'error', error: 'Failed to process streaming search request.' });
     res.end();
   }
+});
+
+app.post('/api/github/create-issue', async (req: Request, res: Response) => {
+  if (!isGitHubConfigured()) {
+    res.status(503).json({ error: 'GitHub integration is not configured.' });
+    return;
+  }
+
+  const body = req.body as { title?: string; body?: string } | undefined;
+  const title = body?.title?.trim();
+  const issueBody = body?.body?.trim();
+
+  if (!title || !issueBody) {
+    res.status(400).json({ error: 'title and body are required.' });
+    return;
+  }
+
+  try {
+    const issue = await createGitHubIssue(title, issueBody);
+    if (!issue) {
+      res.status(500).json({ error: 'Failed to create GitHub issue.' });
+      return;
+    }
+    res.json(issue);
+  } catch (err) {
+    console.error('[API] /api/github/create-issue failed:', err);
+    res.status(500).json({ error: 'Failed to create GitHub issue.' });
+  }
+});
+
+app.delete('/api/session/:sessionId', (req: Request<{ sessionId: string }>, res: Response) => {
+  clearSession(req.params.sessionId);
+  res.json({ ok: true });
 });
 
 app.get('/api/article/:topic', async (req: Request<{ topic: string }>, res: Response) => {
@@ -95,6 +132,11 @@ app.get('/api/article/:topic', async (req: Request<{ topic: string }>, res: Resp
 
 const server = app.listen(PORT, () => {
   console.log(`SupportPilot running at http://localhost:${PORT}`);
+  if (isGitHubConfigured()) {
+    console.log('[GitHub MCP] Integration enabled.');
+  } else {
+    console.log('[GitHub MCP] Not configured — set GITHUB_PERSONAL_ACCESS_TOKEN, GITHUB_REPO_OWNER, GITHUB_REPO_NAME to enable.');
+  }
 });
 
 server.on('error', (err: NodeJS.ErrnoException) => {

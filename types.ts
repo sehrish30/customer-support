@@ -28,13 +28,29 @@ export interface KnowledgeBaseSource {
   similarity: number;
 }
 
-export type AppSource = WebSource | KnowledgeBaseSource;
+
+export interface GitHubSource {
+  type: 'github';
+  number: number;
+  title: string;
+  url: string;
+  state: 'open' | 'closed';
+  body: string;
+}
+
+export type AppSource = WebSource | KnowledgeBaseSource | GitHubSource;
 
 export interface AgentResponse {
   answer: string;
   sources: AppSource[] | null;
   toolUsed: string | null;
   toolsUsed: string[];
+  sessionId?: string | undefined;
+  hasMemory?: boolean | undefined;
+}
+
+export interface AgentOptions {
+  sessionId?: string | undefined;
 }
 
 export interface StreamHandlers {
@@ -43,10 +59,12 @@ export interface StreamHandlers {
 
 export interface StreamEvent {
   type: 'start' | 'text-delta' | 'done' | 'error';
-  delta?: string;
-  answer?: string;
-  sources?: AppSource[] | null;
-  toolUsed?: string | null;
-  toolsUsed?: string[];
-  error?: string;
+  delta?: string | undefined;
+  answer?: string | undefined;
+  sources?: AppSource[] | null | undefined;
+  toolUsed?: string | null | undefined;
+  toolsUsed?: string[] | undefined;
+  error?: string | undefined;
+  sessionId?: string | undefined;
+  hasMemory?: boolean | undefined;
 }
