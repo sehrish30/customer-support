@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "start": "tsx server.ts",
-        "dev": "tsx server.ts",
+        "dev": "tsx watch server.ts",
         "cli": "tsx index.ts",
         "seed": "tsx scripts/seed.ts",
         "reembed": "tsx scripts/reembed.ts",
