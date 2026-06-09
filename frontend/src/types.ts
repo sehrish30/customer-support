@@ -41,6 +41,16 @@ export interface SearchStatus {
   tone: StatusTone;
 }
 
+export interface ChatTurn {
+  id: string;
+  query: string;
+  answer: string;
+  sources: AppSource[] | null;
+  isStreaming: boolean;
+  issueState: 'idle' | 'loading' | 'done';
+  createdIssue: { url: string; number: number } | null;
+}
+
 export interface StreamEvent {
   type: 'start' | 'text-delta' | 'done' | 'error';
   delta?: string;

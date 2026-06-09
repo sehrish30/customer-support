@@ -13,24 +13,32 @@ export function SearchForm({ onSubmit, isLoading }: SearchFormProps): React.JSX.
     const query = textareaRef.current?.value.trim();
     if (!query) return;
     onSubmit(query);
+    if (textareaRef.current) textareaRef.current.value = '';
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>): void {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const query = textareaRef.current?.value.trim();
+      if (!query || isLoading) return;
+      onSubmit(query);
+      if (textareaRef.current) textareaRef.current.value = '';
+    }
   }
 
   return (
-    <section className="card" aria-label="Search panel">
-      <form className="search-form" onSubmit={handleSubmit}>
-        <label htmlFor="query">Ask a support question</label>
-        <textarea
-          id="query"
-          name="query"
-          ref={textareaRef}
-          rows={4}
-          placeholder="Example: How can I change my billing plan and when does the update take effect?"
-          required
-        />
-        <button type="submit" disabled={isLoading}>
-          Run Search
-        </button>
-      </form>
-    </section>
+    <form className="chat-input-form" onSubmit={handleSubmit}>
+      <textarea
+        ref={textareaRef}
+        className="chat-input-textarea"
+        placeholder="Ask a support question…"
+        rows={1}
+        onKeyDown={handleKeyDown}
+        disabled={isLoading}
+      />
+      <button type="submit" className="chat-send-btn" disabled={isLoading}>
+        {isLoading ? '…' : '↑'}
+      </button>
+    </form>
   );
 }

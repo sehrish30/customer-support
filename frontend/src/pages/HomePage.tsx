@@ -1,43 +1,66 @@
-import { useState } from "react";
-import { useSearch } from "../hooks/useSearch.js";
-import { SearchForm } from "../components/SearchForm.js";
-import { Results } from "../components/Results.js";
+import { useEffect, useRef } from 'react';
+import { useSearch } from '../hooks/useSearch.js';
+import { SearchForm } from '../components/SearchForm.js';
+import { ChatMessage } from '../components/ChatMessage.js';
 
 export default function HomePage(): React.JSX.Element {
-  const { answer, sources, status, isLoading, hasMemory, runSearch, clearSession, createGitHubIssue } =
-    useSearch();
-  const [lastQuery, setLastQuery] = useState('');
+  const { turns, isLoading, hasMemory, runSearch, clearSession, createGitHubIssue, updateTurnIssue } = useSearch();
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  async function handleSearch(query: string): Promise<void> {
-    setLastQuery(query);
-    await runSearch(query);
-  }
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [turns.length]);
 
   return (
     <>
       <div className="bg-shape bg-shape-a" />
       <div className="bg-shape bg-shape-b" />
 
-      <main className="app-shell">
-        <header className="hero">
-          <h1>SupportPilot AI</h1>
-          <p className="subtitle">
-            Hybrid support assistant powered by knowledge-base retrieval and
-            agentic LLM routing.
-          </p>
+      <div className="chat-shell">
+        <header className="chat-header">
+          <div className="chat-header-left">
+            <h1 className="chat-title">SupportPilot AI</h1>
+            {hasMemory && (
+              <span className="pill pill--memory" title="Conversation history is active">Memory active</span>
+            )}
+          </div>
+          {turns.length > 0 && (
+            <button type="button" className="btn-new-chat" onClick={clearSession}>
+              New chat
+            </button>
+          )}
         </header>
 
-        <SearchForm onSubmit={handleSearch} isLoading={isLoading} />
-        <Results
-          answer={answer}
-          query={lastQuery}
-          sources={sources}
-          status={status}
-          hasMemory={hasMemory}
-          onClear={clearSession}
-          onCreateIssue={createGitHubIssue}
-        />
-      </main>
+        <main className="chat-messages">
+          {turns.length === 0 && (
+            <div className="chat-empty">
+              <p className="chat-empty-title">How can I help you today?</p>
+              <p className="muted">Ask anything about your account, billing, or technical issues.</p>
+            </div>
+          )}
+          {turns.map(turn => (
+            <ChatMessage
+              key={turn.id}
+              turn={turn}
+              onCreateIssue={createGitHubIssue}
+              onUpdateIssue={updateTurnIssue}
+            />
+          ))}
+          {isLoading && turns[turns.length - 1]?.isStreaming === false && (
+            <div className="chat-row chat-row--ai">
+              <div className="chat-avatar">AI</div>
+              <div className="chat-bubble chat-bubble--ai">
+                <span className="chat-typing">●●●</span>
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </main>
+
+        <footer className="chat-input-bar">
+          <SearchForm onSubmit={runSearch} isLoading={isLoading} />
+        </footer>
+      </div>
     </>
   );
 }

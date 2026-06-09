@@ -1,46 +1,50 @@
 import { useState, useCallback, useRef } from 'react';
-import type { AppSource, SearchStatus, StreamEvent } from '../types.js';
+import type { ChatTurn, StreamEvent } from '../types.js';
 
 export interface UseSearchReturn {
-  answer: string;
-  sources: AppSource[] | null;
-  status: SearchStatus;
+  turns: ChatTurn[];
   isLoading: boolean;
   hasMemory: boolean;
   sessionId: string;
   runSearch: (query: string) => Promise<void>;
   clearSession: () => void;
   createGitHubIssue: (title: string, body: string) => Promise<{ url: string; number: number } | null>;
+  updateTurnIssue: (id: string, state: ChatTurn['issueState'], issue: ChatTurn['createdIssue']) => void;
 }
 
-function generateSessionId(): string {
+function generateId(): string {
   return typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
 export function useSearch(): UseSearchReturn {
-  const sessionIdRef = useRef<string>(generateSessionId());
-  const [answer, setAnswer] = useState('');
-  const [sources, setSources] = useState<AppSource[] | null>(null);
-  const [status, setStatus] = useState<SearchStatus>({ label: 'Idle', tone: 'idle' });
+  const sessionIdRef = useRef<string>(generateId());
+  const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMemory, setHasMemory] = useState(false);
 
   const clearSession = useCallback(() => {
     void fetch(`/api/session/${sessionIdRef.current}`, { method: 'DELETE' }).catch(() => undefined);
-    sessionIdRef.current = generateSessionId();
-    setAnswer('');
-    setSources(null);
-    setStatus({ label: 'Idle', tone: 'idle' });
+    sessionIdRef.current = generateId();
+    setTurns([]);
     setHasMemory(false);
   }, []);
 
+  const updateTurnIssue = useCallback((
+    id: string,
+    state: ChatTurn['issueState'],
+    issue: ChatTurn['createdIssue'],
+  ) => {
+    setTurns(prev => prev.map(t => t.id === id ? { ...t, issueState: state, createdIssue: issue } : t));
+  }, []);
+
   const runSearch = useCallback(async (query: string): Promise<void> => {
+    const id = generateId();
+    setTurns(prev => [...prev, {
+      id, query, answer: '', sources: null, isStreaming: true, issueState: 'idle', createdIssue: null,
+    }]);
     setIsLoading(true);
-    setStatus({ label: 'Streaming', tone: 'loading' });
-    setAnswer('');
-    setSources(null);
 
     try {
       const response = await fetch('/api/search/stream', {
@@ -55,12 +59,17 @@ export function useSearch(): UseSearchReturn {
       }
 
       await consumeStream(response, {
-        onTextDelta: (delta) => setAnswer((prev) => prev + delta),
+        onTextDelta: (delta) => {
+          setTurns(prev => prev.map(t => t.id === id ? { ...t, answer: t.answer + delta } : t));
+        },
         onDone: (event) => {
-          setAnswer((prev) => prev.trim() || event.answer || 'No answer generated.');
-          setSources(event.sources ?? null);
+          setTurns(prev => prev.map(t => t.id === id ? {
+            ...t,
+            answer: event.answer || t.answer.trim() || 'No answer generated.',
+            sources: event.sources ?? null,
+            isStreaming: false,
+          } : t));
           setHasMemory(event.hasMemory ?? false);
-          setStatus({ label: 'Complete', tone: 'success' });
         },
         onError: (event) => {
           throw new Error(event.error ?? 'Streaming request failed');
@@ -68,9 +77,9 @@ export function useSearch(): UseSearchReturn {
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setAnswer(`Error: ${message}`);
-      setSources(null);
-      setStatus({ label: 'Failed', tone: 'error' });
+      setTurns(prev => prev.map(t => t.id === id ? {
+        ...t, answer: `Error: ${message}`, isStreaming: false,
+      } : t));
     } finally {
       setIsLoading(false);
     }
@@ -93,17 +102,7 @@ export function useSearch(): UseSearchReturn {
     }
   }, []);
 
-  return {
-    answer,
-    sources,
-    status,
-    isLoading,
-    hasMemory,
-    sessionId: sessionIdRef.current,
-    runSearch,
-    clearSession,
-    createGitHubIssue,
-  };
+  return { turns, isLoading, hasMemory, sessionId: sessionIdRef.current, runSearch, clearSession, createGitHubIssue, updateTurnIssue };
 }
 
 interface StreamCallbacks {
@@ -134,9 +133,7 @@ async function consumeStream(response: Response, callbacks: StreamCallbacks): Pr
   }
 
   const trailing = buffer.trim();
-  if (trailing) {
-    applyEvent(JSON.parse(trailing) as StreamEvent, callbacks);
-  }
+  if (trailing) applyEvent(JSON.parse(trailing) as StreamEvent, callbacks);
 }
 
 function applyEvent(event: StreamEvent, callbacks: StreamCallbacks): void {
