@@ -356,6 +356,32 @@ button:disabled {
   transform: translateY(-1px);
 }
 
+.issue-guard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.issue-guard-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.btn-file-anyway {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.btn-file-anyway:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 .issue-created-link {
   font-size: 0.85rem;
   font-weight: 600;
@@ -420,6 +446,11 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  scrollbar-width: none;
+}
+
+.chat-messages::-webkit-scrollbar {
+  display: none;
 }
 
 .chat-empty {

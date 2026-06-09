@@ -38,14 +38,20 @@ export default function HomePage(): React.JSX.Element {
               <p className="muted">Ask anything about your account, billing, or technical issues.</p>
             </div>
           )}
-          {turns.map(turn => (
-            <ChatMessage
-              key={turn.id}
-              turn={turn}
-              onCreateIssue={createGitHubIssue}
-              onUpdateIssue={updateTurnIssue}
-            />
-          ))}
+          {turns.map(turn => {
+            const priorIssues = turns
+              .filter(t => t.id !== turn.id && t.createdIssue !== null)
+              .map(t => ({ ...t.createdIssue!, query: t.query }));
+            return (
+              <ChatMessage
+                key={turn.id}
+                turn={turn}
+                priorIssues={priorIssues}
+                onCreateIssue={createGitHubIssue}
+                onUpdateIssue={updateTurnIssue}
+              />
+            );
+          })}
           {isLoading && turns[turns.length - 1]?.isStreaming === false && (
             <div className="chat-row chat-row--ai">
               <div className="chat-avatar">AI</div>
