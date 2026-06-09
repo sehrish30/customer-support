@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useSearch } from "../hooks/useSearch.js";
 import { SearchForm } from "../components/SearchForm.js";
 import { Results } from "../components/Results.js";
@@ -5,6 +6,12 @@ import { Results } from "../components/Results.js";
 export default function HomePage(): React.JSX.Element {
   const { answer, sources, status, isLoading, hasMemory, runSearch, clearSession, createGitHubIssue } =
     useSearch();
+  const [lastQuery, setLastQuery] = useState('');
+
+  async function handleSearch(query: string): Promise<void> {
+    setLastQuery(query);
+    await runSearch(query);
+  }
 
   return (
     <>
@@ -20,9 +27,10 @@ export default function HomePage(): React.JSX.Element {
           </p>
         </header>
 
-        <SearchForm onSubmit={runSearch} isLoading={isLoading} />
+        <SearchForm onSubmit={handleSearch} isLoading={isLoading} />
         <Results
           answer={answer}
+          query={lastQuery}
           sources={sources}
           status={status}
           hasMemory={hasMemory}

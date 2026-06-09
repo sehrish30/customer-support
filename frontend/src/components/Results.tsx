@@ -4,6 +4,7 @@ import { SourceItem } from './SourceItem.js';
 
 interface ResultsProps {
   answer: string;
+  query: string;
   sources: AppSource[] | null;
   status: SearchStatus;
   hasMemory: boolean;
@@ -13,6 +14,7 @@ interface ResultsProps {
 
 export function Results({
   answer,
+  query,
   sources,
   status,
   hasMemory,
@@ -28,8 +30,8 @@ export function Results({
   async function handleReportBug(): Promise<void> {
     if (!hasAnswer || issueState !== 'idle') return;
     setIssueState('loading');
-    const title = answer.slice(0, 72).replace(/\n/g, ' ');
-    const body = `**Customer query:**\n> ${answer.slice(0, 500)}\n\n*Reported via SupportPilot AI.*`;
+    const title = query.slice(0, 72);
+    const body = `**Customer query:**\n> ${query}\n\n**AI response:**\n${answer.slice(0, 500)}\n\n*Reported via SupportPilot AI.*`;
     const issue = await onCreateIssue(title, body);
     setCreatedIssue(issue);
     setIssueState('done');
