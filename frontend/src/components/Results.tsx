@@ -27,6 +27,12 @@ export function Results({
   const [issueState, setIssueState] = useState<'idle' | 'loading' | 'done'>('idle');
   const [createdIssue, setCreatedIssue] = useState<{ url: string; number: number } | null>(null);
 
+  function handleClear(): void {
+    setIssueState('idle');
+    setCreatedIssue(null);
+    onClear();
+  }
+
   async function handleReportBug(): Promise<void> {
     if (!hasAnswer || issueState !== 'idle') return;
     setIssueState('loading');
@@ -50,7 +56,7 @@ export function Results({
         </div>
         <div className="results-head-right">
           {hasContent && (
-            <button type="button" className="btn-clear" onClick={onClear}>
+            <button type="button" className="btn-clear" onClick={handleClear}>
               Clear
             </button>
           )}
