@@ -13,16 +13,27 @@ interface ChatMessageProps {
   priorIssues: PriorIssue[];
   onCreateIssue: (title: string, body: string) => Promise<{ url: string; number: number } | null>;
   onUpdateIssue: (id: string, state: ChatTurn['issueState'], issue: ChatTurn['createdIssue']) => void;
+  onReportToAgent: (query: string, answer: string, customerEmail: string) => Promise<boolean>;
 }
 
-export function ChatMessage({ turn, priorIssues, onCreateIssue, onUpdateIssue }: ChatMessageProps): React.JSX.Element {
+export function ChatMessage({ turn, priorIssues, onCreateIssue, onUpdateIssue, onReportToAgent }: ChatMessageProps): React.JSX.Element {
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [forceCreate, setForceCreate] = useState(false);
+  const [emailState, setEmailState] = useState<'idle' | 'form' | 'loading' | 'sent' | 'error'>('idle');
+  const [customerEmail, setCustomerEmail] = useState('');
   const hasSources = Array.isArray(turn.sources) && turn.sources.length > 0;
 
   const githubSources = turn.sources?.filter(s => s.type === 'github') ?? [];
   const hasRelatedIssues = githubSources.length > 0;
   const hasPriorIssue = priorIssues.length > 0;
+
+  async function handleSubmitEmail(e: { preventDefault: () => void }): Promise<void> {
+    e.preventDefault();
+    if (!customerEmail.trim()) return;
+    setEmailState('loading');
+    const ok = await onReportToAgent(turn.query, turn.answer, customerEmail.trim());
+    setEmailState(ok ? 'sent' : 'error');
+  }
 
   async function handleReportBug(): Promise<void> {
     if (turn.issueState !== 'idle') return;
@@ -103,6 +114,34 @@ export function ChatMessage({ turn, priorIssues, onCreateIssue, onUpdateIssue }:
           {!turn.isStreaming && turn.answer && (
             <div className="chat-actions">
               {renderIssueActions()}
+              <div className="email-action">
+                {emailState === 'idle' && (
+                  <button type="button" className="btn-report-agent" onClick={() => setEmailState('form')}>
+                    Talk to agent
+                  </button>
+                )}
+                {emailState === 'form' && (
+                  <form className="agent-email-form" onSubmit={handleSubmitEmail}>
+                    <p className="agent-email-label">Enter your email and an agent will follow up with you:</p>
+                    <div className="agent-email-row">
+                      <input
+                        type="email"
+                        className="agent-email-input"
+                        placeholder="your@email.com"
+                        value={customerEmail}
+                        onChange={e => setCustomerEmail(e.target.value)}
+                        required
+                        autoFocus
+                      />
+                      <button type="submit" className="btn-report-agent">Send</button>
+                      <button type="button" className="btn-cancel-email" onClick={() => setEmailState('idle')}>Cancel</button>
+                    </div>
+                  </form>
+                )}
+                {emailState === 'loading' && <span className="muted">Sending…</span>}
+                {emailState === 'sent' && <span className="email-sent">Agent notified — expect a reply at {customerEmail} ✓</span>}
+                {emailState === 'error' && <span className="email-error">Failed to send — check email config</span>}
+              </div>
             </div>
           )}
 

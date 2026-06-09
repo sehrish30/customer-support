@@ -18,9 +18,12 @@
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@modelcontextprotocol/server-github": "^2025.4.8",
         "@supabase/supabase-js": "^2.56.1",
+        "@types/nodemailer": "^8.0.0",
         "ai": "^6.0.0",
         "dotenv": "^17.4.2",
         "express": "^5.2.1",
+        "nodemailer": "^8.0.10",
+        "resend": "^6.12.4",
         "zod": "^4.1.5"
     },
     "devDependencies": {

@@ -4,7 +4,7 @@ import { SearchForm } from '../components/SearchForm.js';
 import { ChatMessage } from '../components/ChatMessage.js';
 
 export default function HomePage(): React.JSX.Element {
-  const { turns, isLoading, hasMemory, runSearch, clearSession, createGitHubIssue, updateTurnIssue } = useSearch();
+  const { turns, isLoading, hasMemory, runSearch, clearSession, createGitHubIssue, updateTurnIssue, reportToAgent } = useSearch();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,6 +49,7 @@ export default function HomePage(): React.JSX.Element {
                 priorIssues={priorIssues}
                 onCreateIssue={createGitHubIssue}
                 onUpdateIssue={updateTurnIssue}
+                onReportToAgent={reportToAgent}
               />
             );
           })}

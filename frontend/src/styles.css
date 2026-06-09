@@ -393,6 +393,81 @@ button:disabled {
   text-decoration: underline;
 }
 
+.email-action {
+  margin-top: 8px;
+}
+
+.agent-email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agent-email-label {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.agent-email-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.agent-email-input {
+  flex: 1;
+  min-width: 180px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.agent-email-input:focus {
+  outline: none;
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+}
+
+.btn-cancel-email {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 5px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.btn-report-agent {
+  background: transparent;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 5px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.btn-report-agent:hover {
+  background: #eff6ff;
+  transform: translateY(-1px);
+}
+
+.email-sent {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.email-error {
+  font-size: 0.85rem;
+  color: var(--error);
+}
+
 /* ── Chat layout ──────────────────────────────────────────── */
 
 .chat-shell {

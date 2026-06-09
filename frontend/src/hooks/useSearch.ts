@@ -10,6 +10,7 @@ export interface UseSearchReturn {
   clearSession: () => void;
   createGitHubIssue: (title: string, body: string) => Promise<{ url: string; number: number } | null>;
   updateTurnIssue: (id: string, state: ChatTurn['issueState'], issue: ChatTurn['createdIssue']) => void;
+  reportToAgent: (query: string, answer: string, customerEmail: string) => Promise<boolean>;
 }
 
 function generateId(): string {
@@ -102,7 +103,20 @@ export function useSearch(): UseSearchReturn {
     }
   }, []);
 
-  return { turns, isLoading, hasMemory, sessionId: sessionIdRef.current, runSearch, clearSession, createGitHubIssue, updateTurnIssue };
+  const reportToAgent = useCallback(async (query: string, answer: string, customerEmail: string): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/email/report-to-agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, answer, customerEmail }),
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  return { turns, isLoading, hasMemory, sessionId: sessionIdRef.current, runSearch, clearSession, createGitHubIssue, updateTurnIssue, reportToAgent };
 }
 
 interface StreamCallbacks {

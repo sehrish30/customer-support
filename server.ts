@@ -7,6 +7,7 @@ import {
   createGitHubIssue,
   isGitHubConfigured,
 } from "./tools/githubMcpTool.js";
+import { sendAgentReport, isEmailConfigured } from "./tools/emailTool.js";
 import { clearSession } from "./tools/memoryTool.js";
 import type { StreamEvent } from "./types.js";
 import { supabase } from "./config.js";
@@ -21,6 +22,7 @@ app.get("/api/health", (_req: Request, res: Response) => {
     ok: true,
     service: "supportpilot-api",
     github: isGitHubConfigured(),
+    email: isEmailConfigured(),
   });
 });
 
@@ -113,6 +115,35 @@ app.post("/api/github/create-issue", async (req: Request, res: Response) => {
   } catch (err) {
     console.error("[API] /api/github/create-issue failed:", err);
     res.status(500).json({ error: "Failed to create GitHub issue." });
+  }
+});
+
+app.post("/api/email/report-to-agent", async (req: Request, res: Response) => {
+  if (!isEmailConfigured()) {
+    res.status(503).json({ error: "Email integration is not configured." });
+    return;
+  }
+
+  const body = req.body as { query?: string; answer?: string; customerEmail?: string } | undefined;
+  const query = body?.query?.trim();
+  const answer = body?.answer?.trim();
+  const customerEmail = body?.customerEmail?.trim() || undefined;
+
+  if (!query || !answer) {
+    res.status(400).json({ error: "query and answer are required." });
+    return;
+  }
+
+  try {
+    const ok = await sendAgentReport(query, answer, customerEmail);
+    if (!ok) {
+      res.status(500).json({ error: "Failed to send email." });
+      return;
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[API] /api/email/report-to-agent failed:", err);
+    res.status(500).json({ error: "Failed to send email." });
   }
 });
 
