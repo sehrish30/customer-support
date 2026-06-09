@@ -62,7 +62,7 @@ export async function searchGitHubIssues(query: string): Promise<GitHubSource[]>
     const client = await getClient();
     const result = await client.callTool({
       name: 'search_issues',
-      arguments: { query: `${query} repo:${owner}/${repo} is:issue` },
+      arguments: { q: `${query} repo:${owner}/${repo} is:issue` },
     });
 
     const text = extractText(result);
