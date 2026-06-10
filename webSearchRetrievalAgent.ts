@@ -6,6 +6,7 @@ import {
   KB_SUFFICIENCY_THRESHOLD,
 } from "./constants.js";
 import { getAnswerPrompt } from "./prompts.js";
+import { FEW_SHOT_EXAMPLES } from "./fewShotExamples.js";
 import { groq } from "./config.js";
 import { searchKnowledgeBase } from "./tools/knowledgeBaseTool.js";
 import { searchWeb } from "./tools/webSearchTool.js";
@@ -216,13 +217,18 @@ export async function webSearchRetrievalAgent(
     const context = buildContext(sources);
     const promptText = buildPrompt(question, context, historyContext);
 
+    const userContent = imageBase64
+      ? [{ type: 'text' as const, text: promptText }, { type: 'image' as const, image: imageBase64 }]
+      : promptText;
+
     const { text } = await withRateLimit(() =>
       generateText({
         model: groq(imageBase64 ? VISION_MODEL : ANSWERING_MODEL),
         system: getAnswerPrompt(KNOWLEDGE_BASE_DESCRIPTION),
-        ...(imageBase64
-          ? { messages: [{ role: 'user' as const, content: [{ type: 'text' as const, text: promptText }, { type: 'image' as const, image: imageBase64 }] }] }
-          : { prompt: promptText }),
+        messages: [
+          ...FEW_SHOT_EXAMPLES,
+          { role: 'user' as const, content: userContent },
+        ],
       }),
     );
 
@@ -273,13 +279,18 @@ export async function streamWebSearchRetrievalAgent(
   const context = buildContext(sources);
   const promptText = buildPrompt(question, context, historyContext);
 
+  const userContent = imageBase64
+    ? [{ type: 'text' as const, text: promptText }, { type: 'image' as const, image: imageBase64 }]
+    : promptText;
+
   const result = await withRateLimit(() =>
     streamText({
       model: groq(imageBase64 ? VISION_MODEL : ANSWERING_MODEL),
       system: getAnswerPrompt(KNOWLEDGE_BASE_DESCRIPTION),
-      ...(imageBase64
-        ? { messages: [{ role: 'user' as const, content: [{ type: 'text' as const, text: promptText }, { type: 'image' as const, image: imageBase64 }] }] }
-        : { prompt: promptText }),
+      messages: [
+        ...FEW_SHOT_EXAMPLES,
+        { role: 'user' as const, content: userContent },
+      ],
       onChunk: async ({ chunk }) => {
         if (chunk.type === "text-delta") {
           await onTextDelta?.(chunk.text);
