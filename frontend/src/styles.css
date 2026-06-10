@@ -752,6 +752,20 @@ button:disabled {
   object-fit: cover;
 }
 
+.chat-word-count {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px 0;
+  font-size: 0.75rem;
+}
+
+.chat-word-warning {
+  color: var(--error);
+  font-weight: 600;
+}
+
 .chat-input-form:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 5px var(--ring);

@@ -1,5 +1,11 @@
 import { useRef, useState } from "react";
 
+const WORD_LIMIT = 100;
+
+function countWords(text: string): number {
+  return text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
+}
+
 interface SearchFormProps {
   onSubmit: (query: string, imageBase64?: string) => void;
   isLoading: boolean;
@@ -12,12 +18,14 @@ export function SearchForm({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [wordCount, setWordCount] = useState(0);
 
   function autoResize(): void {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight}px`;
+    setWordCount(countWords(el.value));
   }
 
   function resetHeight(): void {
@@ -42,15 +50,25 @@ export function SearchForm({
     reader.readAsDataURL(file);
   }
 
+  function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>): void {
+    const el = e.currentTarget;
+    const words = el.value.trim() === "" ? [] : el.value.trim().split(/\s+/);
+    if (words.length > WORD_LIMIT) {
+      el.value = words.slice(0, WORD_LIMIT).join(" ");
+    }
+    autoResize();
+  }
+
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>): void {
     e.preventDefault();
     const query = textareaRef.current?.value.trim();
-    if (!query) return;
+    if (!query || wordCount > WORD_LIMIT) return;
     onSubmit(query, imagePreview ?? undefined);
     if (textareaRef.current) {
       textareaRef.current.value = "";
       resetHeight();
     }
+    setWordCount(0);
     clearImage();
   }
 
@@ -58,12 +76,13 @@ export function SearchForm({
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       const query = textareaRef.current?.value.trim();
-      if (!query || isLoading) return;
+      if (!query || isLoading || wordCount > WORD_LIMIT) return;
       onSubmit(query, imagePreview ?? undefined);
       if (textareaRef.current) {
         textareaRef.current.value = "";
         resetHeight();
       }
+      setWordCount(0);
       clearImage();
     }
   }
@@ -87,6 +106,14 @@ export function SearchForm({
           </button>
         </div>
       )}
+      <div className="chat-word-count">
+        {wordCount >= WORD_LIMIT && (
+          <span className="chat-word-warning">Word limit reached. Please shorten your message.</span>
+        )}
+        <span style={{ color: wordCount >= WORD_LIMIT ? "var(--error)" : "var(--muted)" }}>
+          {wordCount}/{WORD_LIMIT}
+        </span>
+      </div>
       <div className="chat-input-row">
         <textarea
           ref={textareaRef}
@@ -94,7 +121,7 @@ export function SearchForm({
           placeholder="Ask a support question…"
           rows={1}
           onKeyDown={handleKeyDown}
-          onInput={autoResize}
+          onChange={handleInput}
           disabled={isLoading}
         />
         <button
