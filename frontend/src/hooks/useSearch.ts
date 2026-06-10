@@ -6,6 +6,7 @@ export interface UseSearchReturn {
   isLoading: boolean;
   hasMemory: boolean;
   sessionId: string;
+  hasSummary: boolean;
   runSearch: (query: string, imageBase64?: string) => Promise<void>;
   clearSession: () => void;
   createGitHubIssue: (title: string, body: string) => Promise<{ url: string; number: number } | null>;
@@ -24,12 +25,14 @@ export function useSearch(): UseSearchReturn {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMemory, setHasMemory] = useState(false);
+  const [hasSummary, setHasSummary] = useState(false);
 
   const clearSession = useCallback(() => {
     void fetch(`/api/session/${sessionIdRef.current}`, { method: 'DELETE' }).catch(() => undefined);
     sessionIdRef.current = generateId();
     setTurns([]);
     setHasMemory(false);
+    setHasSummary(false);
   }, []);
 
   const updateTurnIssue = useCallback((
@@ -72,6 +75,7 @@ export function useSearch(): UseSearchReturn {
             isStreaming: false,
           } : t));
           setHasMemory(event.hasMemory ?? false);
+          setHasSummary(event.hasSummary ?? false);
         },
         onError: (event) => {
           throw new Error(event.error ?? 'Streaming request failed');
@@ -117,7 +121,7 @@ export function useSearch(): UseSearchReturn {
     }
   }, []);
 
-  return { turns, isLoading, hasMemory, sessionId: sessionIdRef.current, runSearch, clearSession, createGitHubIssue, updateTurnIssue, reportToAgent };
+  return { turns, isLoading, hasMemory, hasSummary, sessionId: sessionIdRef.current, runSearch, clearSession, createGitHubIssue, updateTurnIssue, reportToAgent };
 }
 
 interface StreamCallbacks {

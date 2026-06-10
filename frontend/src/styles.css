@@ -349,6 +349,13 @@ button:disabled {
   font-size: 0.78rem;
 }
 
+.pill--summary {
+  background: #fdf4e7;
+  color: #92520a;
+  border-color: #f5d9a3;
+  font-size: 0.78rem;
+}
+
 /* Report bug row */
 .report-bug-row {
   margin: 8px 0 14px;

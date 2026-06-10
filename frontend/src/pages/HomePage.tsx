@@ -4,7 +4,7 @@ import { SearchForm } from '../components/SearchForm.js';
 import { ChatMessage } from '../components/ChatMessage.js';
 
 export default function HomePage(): React.JSX.Element {
-  const { turns, isLoading, hasMemory, runSearch, clearSession, createGitHubIssue, updateTurnIssue, reportToAgent } = useSearch();
+  const { turns, isLoading, hasMemory, hasSummary, runSearch, clearSession, createGitHubIssue, updateTurnIssue, reportToAgent } = useSearch();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,6 +22,9 @@ export default function HomePage(): React.JSX.Element {
             <h1 className="chat-title">SupportPilot AI</h1>
             {hasMemory && (
               <span className="pill pill--memory" title="Conversation history is active">Memory active</span>
+            )}
+            {hasSummary && (
+              <span className="pill pill--summary" title="Older messages have been summarised to save context">Context summarised</span>
             )}
           </div>
           {turns.length > 0 && (

@@ -62,4 +62,5 @@ export interface StreamEvent {
   error?: string;
   sessionId?: string;
   hasMemory?: boolean;
+  hasSummary?: boolean;
 }

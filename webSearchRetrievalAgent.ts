@@ -16,6 +16,7 @@ import {
 } from "./tools/githubMcpTool.js";
 import {
   getHistory,
+  getSummary,
   addTurn,
   formatHistoryAsContext,
 } from "./tools/memoryTool.js";
@@ -210,7 +211,8 @@ export async function webSearchRetrievalAgent(
   );
 
   const history = sessionId ? getHistory(sessionId) : [];
-  const historyContext = formatHistoryAsContext(history);
+  const summary = sessionId ? getSummary(sessionId) : '';
+  const historyContext = formatHistoryAsContext(history, summary);
 
   try {
     const { sources, toolsUsed } = await retrieve(question);
@@ -235,8 +237,8 @@ export async function webSearchRetrievalAgent(
     const answer = text || "I couldn't generate a response.";
 
     if (sessionId) {
-      addTurn(sessionId, "user", question);
-      addTurn(sessionId, "assistant", answer);
+      await addTurn(sessionId, "user", question);
+      await addTurn(sessionId, "assistant", answer);
     }
 
     return {
@@ -246,6 +248,7 @@ export async function webSearchRetrievalAgent(
       toolsUsed,
       sessionId,
       hasMemory: history.length > 0,
+      hasSummary: sessionId ? !!getSummary(sessionId) : false,
     };
   } catch (err) {
     console.error("[Agent] Error:", err);
@@ -273,7 +276,8 @@ export async function streamWebSearchRetrievalAgent(
   const { onTextDelta } = handlers;
 
   const history = sessionId ? getHistory(sessionId) : [];
-  const historyContext = formatHistoryAsContext(history);
+  const summary = sessionId ? getSummary(sessionId) : '';
+  const historyContext = formatHistoryAsContext(history, summary);
 
   const { sources, toolsUsed } = await retrieve(question);
   const context = buildContext(sources);
@@ -304,8 +308,8 @@ export async function streamWebSearchRetrievalAgent(
   const answer = text || "I couldn't generate a response.";
 
   if (sessionId) {
-    addTurn(sessionId, "user", question);
-    addTurn(sessionId, "assistant", answer);
+    await addTurn(sessionId, "user", question);
+    await addTurn(sessionId, "assistant", answer);
   }
 
   return {
@@ -315,5 +319,6 @@ export async function streamWebSearchRetrievalAgent(
     toolsUsed,
     sessionId,
     hasMemory: history.length > 0,
+    hasSummary: sessionId ? !!getSummary(sessionId) : false,
   };
 }

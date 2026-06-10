@@ -47,6 +47,7 @@ export interface AgentResponse {
   toolsUsed: string[];
   sessionId?: string | undefined;
   hasMemory?: boolean | undefined;
+  hasSummary?: boolean | undefined;
 }
 
 export interface AgentOptions {
@@ -68,4 +69,5 @@ export interface StreamEvent {
   error?: string | undefined;
   sessionId?: string | undefined;
   hasMemory?: boolean | undefined;
+  hasSummary?: boolean | undefined;
 }
