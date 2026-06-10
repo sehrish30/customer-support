@@ -2,6 +2,7 @@ import { generateText, streamText } from "ai";
 import {
   KNOWLEDGE_BASE_DESCRIPTION,
   ANSWERING_MODEL,
+  VISION_MODEL,
   KB_SUFFICIENCY_THRESHOLD,
 } from "./constants.js";
 import { getAnswerPrompt } from "./prompts.js";
@@ -202,7 +203,7 @@ export async function webSearchRetrievalAgent(
   question: string,
   options: AgentOptions = {},
 ): Promise<AgentResponse> {
-  const { sessionId } = options;
+  const { sessionId, imageBase64 } = options;
   console.log(
     `[Agent] Question: ${question}${sessionId ? ` (session: ${sessionId})` : ""}`,
   );
@@ -213,12 +214,15 @@ export async function webSearchRetrievalAgent(
   try {
     const { sources, toolsUsed } = await retrieve(question);
     const context = buildContext(sources);
+    const promptText = buildPrompt(question, context, historyContext);
 
     const { text } = await withRateLimit(() =>
       generateText({
-        model: groq(ANSWERING_MODEL),
+        model: groq(imageBase64 ? VISION_MODEL : ANSWERING_MODEL),
         system: getAnswerPrompt(KNOWLEDGE_BASE_DESCRIPTION),
-        prompt: buildPrompt(question, context, historyContext),
+        ...(imageBase64
+          ? { messages: [{ role: 'user' as const, content: [{ type: 'text' as const, text: promptText }, { type: 'image' as const, image: imageBase64 }] }] }
+          : { prompt: promptText }),
       }),
     );
 
@@ -256,7 +260,7 @@ export async function streamWebSearchRetrievalAgent(
   handlers: StreamHandlers = {},
   options: AgentOptions = {},
 ): Promise<AgentResponse> {
-  const { sessionId } = options;
+  const { sessionId, imageBase64 } = options;
   console.log(
     `[Agent] Streaming question: ${question}${sessionId ? ` (session: ${sessionId})` : ""}`,
   );
@@ -267,12 +271,15 @@ export async function streamWebSearchRetrievalAgent(
 
   const { sources, toolsUsed } = await retrieve(question);
   const context = buildContext(sources);
+  const promptText = buildPrompt(question, context, historyContext);
 
   const result = await withRateLimit(() =>
     streamText({
-      model: groq(ANSWERING_MODEL),
+      model: groq(imageBase64 ? VISION_MODEL : ANSWERING_MODEL),
       system: getAnswerPrompt(KNOWLEDGE_BASE_DESCRIPTION),
-      prompt: buildPrompt(question, context, historyContext),
+      ...(imageBase64
+        ? { messages: [{ role: 'user' as const, content: [{ type: 'text' as const, text: promptText }, { type: 'image' as const, image: imageBase64 }] }] }
+        : { prompt: promptText }),
       onChunk: async ({ chunk }) => {
         if (chunk.type === "text-delta") {
           await onTextDelta?.(chunk.text);

@@ -47,10 +47,12 @@ app.post("/api/search", async (req: Request, res: Response) => {
 });
 
 app.post("/api/search/stream", async (req: Request, res: Response) => {
-  const body = req.body as { query?: string; sessionId?: string } | undefined;
+  const body = req.body as { query?: string; sessionId?: string; imageBase64?: string } | undefined;
   const query = body?.query;
   const sessionId =
     typeof body?.sessionId === "string" ? body.sessionId : undefined;
+  const imageBase64 =
+    typeof body?.imageBase64 === "string" ? body.imageBase64 : undefined;
 
   if (!query || typeof query !== "string" || !query.trim()) {
     res.status(400).json({ error: "A non-empty query string is required." });
@@ -75,7 +77,7 @@ app.post("/api/search/stream", async (req: Request, res: Response) => {
           writeEvent({ type: "text-delta", delta });
         },
       },
-      { sessionId },
+      { sessionId, imageBase64 },
     );
 
     writeEvent({ type: "done", ...result });

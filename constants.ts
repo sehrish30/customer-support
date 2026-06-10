@@ -5,6 +5,7 @@ export const ANSWERING_MODEL = "llama-3.3-70b-versatile" as const;
 export const EMBEDDING_MODEL_NAME = "gemini-embedding-001" as const;
 export const EMBEDDING_DIMENSIONS = 1536 as const;
 export const CLASSIFICATION_MODEL = "llama-3.3-70b-versatile" as const;
+export const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct" as const;
 export const aiModel = groq(ANSWERING_MODEL);
 export const KNOWLEDGE_BASE_DESCRIPTION =
   "Acme Learning Hub, an online learning and developer community platform" as const;

@@ -65,7 +65,7 @@ export default function HomePage(): React.JSX.Element {
         </main>
 
         <footer className="chat-input-bar">
-          <SearchForm onSubmit={runSearch} isLoading={isLoading} />
+          <SearchForm onSubmit={(q, img) => void runSearch(q, img)} isLoading={isLoading} />
         </footer>
       </div>
     </>

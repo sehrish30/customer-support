@@ -101,7 +101,12 @@ export function ChatMessage({ turn, priorIssues, onCreateIssue, onUpdateIssue, o
   return (
     <div className="chat-turn">
       <div className="chat-row chat-row--user">
-        <div className="chat-bubble chat-bubble--user">{turn.query}</div>
+        <div className="chat-bubble chat-bubble--user">
+          {turn.imageBase64 && (
+            <img src={turn.imageBase64} className="chat-bubble-image" alt="attached" />
+          )}
+          {turn.query}
+        </div>
       </div>
 
       <div className="chat-row chat-row--ai">

@@ -6,7 +6,7 @@ export interface UseSearchReturn {
   isLoading: boolean;
   hasMemory: boolean;
   sessionId: string;
-  runSearch: (query: string) => Promise<void>;
+  runSearch: (query: string, imageBase64?: string) => Promise<void>;
   clearSession: () => void;
   createGitHubIssue: (title: string, body: string) => Promise<{ url: string; number: number } | null>;
   updateTurnIssue: (id: string, state: ChatTurn['issueState'], issue: ChatTurn['createdIssue']) => void;
@@ -40,10 +40,11 @@ export function useSearch(): UseSearchReturn {
     setTurns(prev => prev.map(t => t.id === id ? { ...t, issueState: state, createdIssue: issue } : t));
   }, []);
 
-  const runSearch = useCallback(async (query: string): Promise<void> => {
+  const runSearch = useCallback(async (query: string, imageBase64?: string): Promise<void> => {
     const id = generateId();
     setTurns(prev => [...prev, {
       id, query, answer: '', sources: null, isStreaming: true, issueState: 'idle', createdIssue: null,
+      ...(imageBase64 !== undefined ? { imageBase64 } : {}),
     }]);
     setIsLoading(true);
 
@@ -51,7 +52,7 @@ export function useSearch(): UseSearchReturn {
       const response = await fetch('/api/search/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, sessionId: sessionIdRef.current }),
+        body: JSON.stringify({ query, sessionId: sessionIdRef.current, imageBase64 }),
       });
 
       if (!response.ok) {

@@ -44,6 +44,7 @@ export interface SearchStatus {
 export interface ChatTurn {
   id: string;
   query: string;
+  imageBase64?: string;
   answer: string;
   sources: AppSource[] | null;
   isStreaming: boolean;

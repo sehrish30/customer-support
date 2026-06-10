@@ -51,6 +51,7 @@ export interface AgentResponse {
 
 export interface AgentOptions {
   sessionId?: string | undefined;
+  imageBase64?: string | undefined;
 }
 
 export interface StreamHandlers {
