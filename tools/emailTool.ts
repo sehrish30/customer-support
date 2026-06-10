@@ -30,7 +30,7 @@ export async function sendAgentReport(
       from: 'SupportPilot <onboarding@resend.dev>',
       to,
       ...(customerEmail ? { replyTo: customerEmail } : {}),
-      subject: `Customer issue: ${customerQuery.slice(0, 60)}`,
+      subject: `Customer issue: ${customerQuery.replace(/\s+/g, ' ').trim().slice(0, 60)}`,
       html: `
         ${customerEmail ? `<p><strong>Customer email:</strong> <a href="mailto:${customerEmail}">${customerEmail}</a></p>` : ''}
         <p><strong>Customer query:</strong></p>
