@@ -16,9 +16,14 @@ export async function sendAgentReport(
 
   const resend = new Resend(apiKey);
 
-  const imageHtml = imageBase64
-    ? `<p><strong>Attached screenshot:</strong></p><p><img src="${imageBase64}" style="max-width:480px;border-radius:8px;border:1px solid #ddd;" /></p>`
-    : '';
+  // Strip the data URL prefix (e.g. "data:image/png;base64,") to get raw base64
+  let attachment: { filename: string; content: string } | undefined;
+  if (imageBase64) {
+    const match = imageBase64.match(/^data:image\/(\w+);base64,(.+)$/s);
+    if (match) {
+      attachment = { filename: `screenshot.${match[1]!}`, content: match[2]! };
+    }
+  }
 
   try {
     const { error } = await resend.emails.send({
@@ -30,12 +35,13 @@ export async function sendAgentReport(
         ${customerEmail ? `<p><strong>Customer email:</strong> <a href="mailto:${customerEmail}">${customerEmail}</a></p>` : ''}
         <p><strong>Customer query:</strong></p>
         <blockquote>${customerQuery}</blockquote>
-        ${imageHtml}
+        ${attachment ? `<p><strong>Attached screenshot:</strong> see attachment below.</p>` : ''}
         <p><strong>AI response:</strong></p>
         <p>${aiResponse.replace(/\n/g, '<br>')}</p>
         <hr>
         <p><em>Reported via SupportPilot AI</em></p>
       `,
+      ...(attachment ? { attachments: [attachment] } : {}),
     });
 
     if (error) {
