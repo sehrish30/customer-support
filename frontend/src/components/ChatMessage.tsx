@@ -21,7 +21,7 @@ export function ChatMessage({ turn, priorIssues, onCreateIssue, onUpdateIssue, o
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [forceCreate, setForceCreate] = useState(false);
   const [emailState, setEmailState] = useState<'idle' | 'form' | 'loading' | 'sent' | 'error'>('idle');
-  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('supportpilot.notifications@gmail.com');
   const hasSources = Array.isArray(turn.sources) && turn.sources.length > 0;
 
   const githubSources = turn.sources?.filter(s => s.type === 'github') ?? [];
@@ -39,7 +39,8 @@ export function ChatMessage({ turn, priorIssues, onCreateIssue, onUpdateIssue, o
   async function handleReportBug(): Promise<void> {
     if (turn.issueState !== 'idle') return;
     onUpdateIssue(turn.id, 'loading', null);
-    const title = turn.query.slice(0, 72);
+    const cleaned = turn.query.replace(/\s+/g, ' ').trim();
+    const title = cleaned.length > 72 ? cleaned.slice(0, 69) + '…' : cleaned;
     const body = `**Customer query:**\n> ${turn.query}\n\n**AI response:**\n${turn.answer.slice(0, 500)}\n\n*Reported via SupportPilot AI.*`;
     const issue = await onCreateIssue(title, body);
     onUpdateIssue(turn.id, 'done', issue);

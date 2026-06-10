@@ -702,7 +702,6 @@ button:disabled {
   padding: 8px 8px 8px 16px;
   box-shadow: 0 4px 16px rgba(30, 20, 7, 0.06);
   transition: border-color 160ms, box-shadow 160ms;
-  overflow: hidden;
 }
 
 .chat-input-row {
@@ -714,7 +713,8 @@ button:disabled {
 .chat-input-preview {
   position: relative;
   display: inline-flex;
-  margin-bottom: 8px;
+  margin-top: 6px;
+  margin-bottom: 4px;
 }
 
 .chat-input-preview-img {
