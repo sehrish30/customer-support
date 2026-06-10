@@ -245,6 +245,19 @@ button:disabled {
     width: 100%;
     justify-self: stretch;
   }
+
+  .chat-shell {
+    padding: 0 12px;
+    width: 100%;
+  }
+
+  .btn-new-chat,
+  .chat-send-btn,
+  .chat-attach-btn,
+  .chat-input-preview-remove {
+    width: auto;
+    justify-self: unset;
+  }
 }
 
 .similarity-row {
