@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ChatTurn } from '../types.js';
 import { SourceItem } from './SourceItem.js';
+import { ThinkingVerb } from './ThinkingVerb.js';
 
 interface PriorIssue {
   url: string;
@@ -113,7 +114,7 @@ export function ChatMessage({ turn, priorIssues, onCreateIssue, onUpdateIssue, o
         <div className="chat-avatar">AI</div>
         <div className="chat-bubble chat-bubble--ai">
           <p className="chat-answer">
-            {turn.answer || (turn.isStreaming ? <span className="chat-typing">●●●</span> : '')}
+            {turn.answer || (turn.isStreaming ? <ThinkingVerb /> : '')}
           </p>
 
           {!turn.isStreaming && turn.answer && (

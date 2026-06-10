@@ -611,6 +611,16 @@ button:disabled {
   50% { opacity: 0.3; }
 }
 
+.thinking-verb {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-style: italic;
+  transition: opacity 0.3s ease;
+}
+
+.thinking-verb--in  { opacity: 1; }
+.thinking-verb--out { opacity: 0; }
+
 .chat-actions {
   margin-top: 10px;
   padding-top: 10px;
