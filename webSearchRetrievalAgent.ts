@@ -3,7 +3,6 @@ import {
   KNOWLEDGE_BASE_DESCRIPTION,
   ANSWERING_MODEL,
   KB_SUFFICIENCY_THRESHOLD,
-  GITHUB_SEARCH_SIGNALS,
 } from "./constants.js";
 import { getAnswerPrompt } from "./prompts.js";
 import { groq } from "./config.js";
@@ -86,8 +85,17 @@ function classifyQuery(question: string): RouteDecision {
   return "kb-then-web";
 }
 
-function isGitHubQuery(question: string): boolean {
-  return isGitHubConfigured() && GITHUB_SEARCH_SIGNALS.some(r => r.test(question));
+async function isGitHubQuery(question: string): Promise<boolean> {
+  if (!isGitHubConfigured()) return false;
+  try {
+    const { text } = await generateText({
+      model: groq(ANSWERING_MODEL),
+      prompt: `Does this user message describe a bug, error, or something not working? Reply only "yes" or "no".\n\nMessage: "${question}"`,
+    });
+    return text.trim().toLowerCase().startsWith('yes');
+  } catch {
+    return false;
+  }
 }
 
 async function retrieve(
@@ -98,7 +106,7 @@ async function retrieve(
   const route = classifyQuery(question);
   console.log(`[Agent] Route decision: ${route}`);
 
-  const githubPromise = isGitHubQuery(question)
+  const githubPromise = (await isGitHubQuery(question))
     ? searchGitHubIssues(question)
     : Promise.resolve([] as GitHubSource[]);
 
