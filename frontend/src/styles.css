@@ -500,17 +500,23 @@ button:disabled {
 
 .chat-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 6px;
   padding: 16px 0 12px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
-.chat-header-left {
+.chat-header-top {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+}
+
+.chat-header-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .chat-title {
@@ -526,12 +532,26 @@ button:disabled {
   padding: 6px 14px;
   font-size: 0.85rem;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   transition: color 160ms, border-color 160ms, transform 160ms;
 }
 
 .btn-new-chat:hover {
   color: var(--accent);
   border-color: var(--accent);
+}
+
+.btn-new-chat-icon { flex-shrink: 0; }
+
+@media (max-width: 480px) {
+  .btn-new-chat {
+    padding: 6px 10px;
+  }
+  .btn-new-chat-label {
+    display: none;
+  }
 }
 
 .chat-messages {
