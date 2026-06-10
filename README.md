@@ -1,19 +1,44 @@
 # SupportPilot AI
 
-SupportPilot AI is an agentic customer support assistant that combines:
+SupportPilot AI is a full-stack agentic customer support chatbot that combines knowledge-base retrieval, web search, GitHub issue tracking, vision AI, conversation memory with summarisation, and human agent escalation — all in one.
 
-- Internal knowledge-base retrieval (RAG with Supabase + pgvector)
-- Tool-calling orchestration via the AI SDK
-- Optional web-search grounding for broader or real-time questions
+## Screenshots
+
+### Desktop — Chat with GitHub issue surfaced
+![Desktop chat](docs/screenshots/chat-desktop.png)
+
+### GitHub issue found from user query
+![GitHub issue](docs/screenshots/github-issue.png)
+
+### Mobile — Active session
+![Mobile chat](docs/screenshots/mobile.png)
+
+### Mobile — Context summarised after long session
+![Mobile summarised](docs/screenshots/mobile-summarised.png)
+
+---
+
+## Features
+
+- **Smart retrieval** — routes each query to knowledge base, web search, or GitHub issues based on intent
+- **Vision support** — users can attach screenshots; the AI reads them using Llama 4 Scout
+- **Conversation memory** — per-session history with automatic summarisation after 10 turns
+- **GitHub integration** — surfaces related open issues and lets users file new bugs from the chat
+- **Agent escalation** — emails a human agent with full context and any attached screenshot via Resend
+- **Few-shot prompting** — model learns tone and format from curated examples, not just instructions
+- **Streaming responses** — real-time streamed answers with animated thinking indicator
+- **Mobile-friendly** — responsive UI with image attachment support
 
 ## Stack
 
-- Node.js + TypeScript (ESM)
-- AI SDK (`ai`) with Groq (`llama-3.3-70b-versatile`) for text generation
-- Google Gemini (`gemini-embedding-001`) for embeddings
-- Supabase + pgvector for vector storage and similarity search
-- Express for the API server
-- React + Vite for the frontend
+- **Node.js + TypeScript** (ESM)
+- **Groq** — `llama-3.3-70b-versatile` for text, `llama-4-scout-17b-16e-instruct` for vision (both free tier)
+- **Google Gemini** — `gemini-embedding-001` for embeddings
+- **Supabase + pgvector** — vector storage and similarity search
+- **GitHub MCP** (`@modelcontextprotocol/server-github`) — issue search and creation
+- **Resend** — transactional email for agent escalation
+- **Express** — API server
+- **React + Vite** — frontend
 
 ## Project Structure
 
