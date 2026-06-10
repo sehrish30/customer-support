@@ -672,7 +672,7 @@ button:disabled {
   background: transparent;
   min-height: 24px;
   max-height: 140px;
-  overflow-y: auto;
+  overflow-y: hidden;
   padding: 4px 0;
   -webkit-appearance: none;
 }

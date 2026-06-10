@@ -8,12 +8,26 @@ interface SearchFormProps {
 export function SearchForm({ onSubmit, isLoading }: SearchFormProps): React.JSX.Element {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  function autoResize(): void {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }
+
+  function resetHeight(): void {
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+  }
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>): void {
     e.preventDefault();
     const query = textareaRef.current?.value.trim();
     if (!query) return;
     onSubmit(query);
-    if (textareaRef.current) textareaRef.current.value = '';
+    if (textareaRef.current) {
+      textareaRef.current.value = '';
+      resetHeight();
+    }
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>): void {
@@ -22,7 +36,10 @@ export function SearchForm({ onSubmit, isLoading }: SearchFormProps): React.JSX.
       const query = textareaRef.current?.value.trim();
       if (!query || isLoading) return;
       onSubmit(query);
-      if (textareaRef.current) textareaRef.current.value = '';
+      if (textareaRef.current) {
+        textareaRef.current.value = '';
+        resetHeight();
+      }
     }
   }
 
@@ -34,6 +51,7 @@ export function SearchForm({ onSubmit, isLoading }: SearchFormProps): React.JSX.
         placeholder="Ask a support question…"
         rows={1}
         onKeyDown={handleKeyDown}
+        onInput={autoResize}
         disabled={isLoading}
       />
       <button type="submit" className="chat-send-btn" disabled={isLoading}>
