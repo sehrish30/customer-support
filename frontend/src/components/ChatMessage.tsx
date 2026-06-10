@@ -14,7 +14,7 @@ interface ChatMessageProps {
   priorIssues: PriorIssue[];
   onCreateIssue: (title: string, body: string) => Promise<{ url: string; number: number } | null>;
   onUpdateIssue: (id: string, state: ChatTurn['issueState'], issue: ChatTurn['createdIssue']) => void;
-  onReportToAgent: (query: string, answer: string, customerEmail: string) => Promise<boolean>;
+  onReportToAgent: (query: string, answer: string, customerEmail: string, imageBase64?: string) => Promise<boolean>;
 }
 
 export function ChatMessage({ turn, priorIssues, onCreateIssue, onUpdateIssue, onReportToAgent }: ChatMessageProps): React.JSX.Element {
@@ -32,7 +32,7 @@ export function ChatMessage({ turn, priorIssues, onCreateIssue, onUpdateIssue, o
     e.preventDefault();
     if (!customerEmail.trim()) return;
     setEmailState('loading');
-    const ok = await onReportToAgent(turn.query, turn.answer, customerEmail.trim());
+    const ok = await onReportToAgent(turn.query, turn.answer, customerEmail.trim(), turn.imageBase64);
     setEmailState(ok ? 'sent' : 'error');
   }
 

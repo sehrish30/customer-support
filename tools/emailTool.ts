@@ -8,12 +8,17 @@ export async function sendAgentReport(
   customerQuery: string,
   aiResponse: string,
   customerEmail?: string,
+  imageBase64?: string,
 ): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.AGENT_EMAIL;
   if (!apiKey || !to) return false;
 
   const resend = new Resend(apiKey);
+
+  const imageHtml = imageBase64
+    ? `<p><strong>Attached screenshot:</strong></p><p><img src="${imageBase64}" style="max-width:480px;border-radius:8px;border:1px solid #ddd;" /></p>`
+    : '';
 
   try {
     const { error } = await resend.emails.send({
@@ -25,6 +30,7 @@ export async function sendAgentReport(
         ${customerEmail ? `<p><strong>Customer email:</strong> <a href="mailto:${customerEmail}">${customerEmail}</a></p>` : ''}
         <p><strong>Customer query:</strong></p>
         <blockquote>${customerQuery}</blockquote>
+        ${imageHtml}
         <p><strong>AI response:</strong></p>
         <p>${aiResponse.replace(/\n/g, '<br>')}</p>
         <hr>

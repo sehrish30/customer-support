@@ -126,10 +126,11 @@ app.post("/api/email/report-to-agent", async (req: Request, res: Response) => {
     return;
   }
 
-  const body = req.body as { query?: string; answer?: string; customerEmail?: string } | undefined;
+  const body = req.body as { query?: string; answer?: string; customerEmail?: string; imageBase64?: string } | undefined;
   const query = body?.query?.trim();
   const answer = body?.answer?.trim();
   const customerEmail = body?.customerEmail?.trim() || undefined;
+  const imageBase64 = typeof body?.imageBase64 === 'string' ? body.imageBase64 : undefined;
 
   if (!query || !answer) {
     res.status(400).json({ error: "query and answer are required." });
@@ -137,7 +138,7 @@ app.post("/api/email/report-to-agent", async (req: Request, res: Response) => {
   }
 
   try {
-    const ok = await sendAgentReport(query, answer, customerEmail);
+    const ok = await sendAgentReport(query, answer, customerEmail, imageBase64);
     if (!ok) {
       res.status(500).json({ error: "Failed to send email." });
       return;
