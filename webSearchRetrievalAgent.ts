@@ -8,8 +8,15 @@ import { getAnswerPrompt } from "./prompts.js";
 import { groq } from "./config.js";
 import { searchKnowledgeBase } from "./tools/knowledgeBaseTool.js";
 import { searchWeb } from "./tools/webSearchTool.js";
-import { searchGitHubIssues, isGitHubConfigured } from "./tools/githubMcpTool.js";
-import { getHistory, addTurn, formatHistoryAsContext } from "./tools/memoryTool.js";
+import {
+  searchGitHubIssues,
+  isGitHubConfigured,
+} from "./tools/githubMcpTool.js";
+import {
+  getHistory,
+  addTurn,
+  formatHistoryAsContext,
+} from "./tools/memoryTool.js";
 import { withRateLimit } from "./rateLimiter.js";
 import type {
   AgentResponse,
@@ -32,7 +39,11 @@ function toKbSources(kbDocs: RetrievedDocument[]): KnowledgeBaseSource[] {
 
 function recordToolsUsed(
   toolsUsed: string[],
-  { kbSources = [], webSources = [], githubSources = [] }: {
+  {
+    kbSources = [],
+    webSources = [],
+    githubSources = [],
+  }: {
     kbSources?: AppSource[];
     webSources?: AppSource[];
     githubSources?: AppSource[];
@@ -43,12 +54,16 @@ function recordToolsUsed(
   if (githubSources.length > 0) toolsUsed.push("github_issues");
 }
 
-function buildPrompt(question: string, context: string, history: string): string {
+function buildPrompt(
+  question: string,
+  context: string,
+  history: string,
+): string {
   const parts: string[] = [];
   if (history) parts.push(history);
   if (context.trim()) parts.push(`Context:\n${context}`);
   parts.push(`Question: ${question}`);
-  return parts.join('\n\n');
+  return parts.join("\n\n");
 }
 
 const EXPLICIT_WEB_INTENT = [
@@ -85,16 +100,21 @@ function classifyQuery(question: string): RouteDecision {
   return "kb-then-web";
 }
 
-async function isGitHubQuery(question: string): Promise<boolean> {
-  if (!isGitHubConfigured()) return false;
+async function classifyGitHubQuery(question: string): Promise<string | null> {
+  if (!isGitHubConfigured()) return null;
   try {
     const { text } = await generateText({
       model: groq(ANSWERING_MODEL),
-      prompt: `Does this user message describe a bug, error, or something not working? Reply only "yes" or "no".\n\nMessage: "${question}"`,
+      prompt: `Does this user message describe a bug, error, or something not working?
+If yes, reply with a short 2-4 word GitHub search query (just keywords, no punctuation).
+If no, reply with just the word "no".
+
+Message: "${question}"`,
     });
-    return text.trim().toLowerCase().startsWith('yes');
+    const reply = text.trim().toLowerCase();
+    return reply === "no" ? null : text.trim();
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -106,12 +126,16 @@ async function retrieve(
   const route = classifyQuery(question);
   console.log(`[Agent] Route decision: ${route}`);
 
-  const githubPromise = (await isGitHubQuery(question))
-    ? searchGitHubIssues(question)
+  const githubSearchQuery = await classifyGitHubQuery(question);
+  const githubPromise = githubSearchQuery
+    ? searchGitHubIssues(githubSearchQuery)
     : Promise.resolve([] as GitHubSource[]);
 
   if (route === "web") {
-    const [webSources, githubSources] = await Promise.all([searchWeb(question), githubPromise]);
+    const [webSources, githubSources] = await Promise.all([
+      searchWeb(question),
+      githubPromise,
+    ]);
     sources.push(...webSources, ...githubSources);
     recordToolsUsed(toolsUsed, { webSources, githubSources });
     return { sources, toolsUsed };
@@ -129,7 +153,10 @@ async function retrieve(
     return { sources, toolsUsed };
   }
 
-  const [kbDocs, githubSources] = await Promise.all([searchKnowledgeBase(question), githubPromise]);
+  const [kbDocs, githubSources] = await Promise.all([
+    searchKnowledgeBase(question),
+    githubPromise,
+  ]);
   const kbSources = toKbSources(kbDocs);
   recordToolsUsed(toolsUsed, { kbSources, githubSources });
 
@@ -141,12 +168,16 @@ async function retrieve(
   // kb-then-web
   const bestKBScore = kbSources[0]?.similarity ?? 0;
   if (bestKBScore < KB_SUFFICIENCY_THRESHOLD) {
-    console.log(`[Agent] KB score ${bestKBScore.toFixed(2)} < threshold — running web search.`);
+    console.log(
+      `[Agent] KB score ${bestKBScore.toFixed(2)} < threshold — running web search.`,
+    );
     const webSources = await searchWeb(question);
     sources.push(...kbSources, ...webSources, ...githubSources);
     recordToolsUsed(toolsUsed, { webSources });
   } else {
-    console.log(`[Agent] KB score ${bestKBScore.toFixed(2)} sufficient — skipping web search.`);
+    console.log(
+      `[Agent] KB score ${bestKBScore.toFixed(2)} sufficient — skipping web search.`,
+    );
     sources.push(...kbSources, ...githubSources);
   }
 
@@ -172,7 +203,9 @@ export async function webSearchRetrievalAgent(
   options: AgentOptions = {},
 ): Promise<AgentResponse> {
   const { sessionId } = options;
-  console.log(`[Agent] Question: ${question}${sessionId ? ` (session: ${sessionId})` : ''}`);
+  console.log(
+    `[Agent] Question: ${question}${sessionId ? ` (session: ${sessionId})` : ""}`,
+  );
 
   const history = sessionId ? getHistory(sessionId) : [];
   const historyContext = formatHistoryAsContext(history);
@@ -192,8 +225,8 @@ export async function webSearchRetrievalAgent(
     const answer = text || "I couldn't generate a response.";
 
     if (sessionId) {
-      addTurn(sessionId, 'user', question);
-      addTurn(sessionId, 'assistant', answer);
+      addTurn(sessionId, "user", question);
+      addTurn(sessionId, "assistant", answer);
     }
 
     return {
@@ -207,7 +240,8 @@ export async function webSearchRetrievalAgent(
   } catch (err) {
     console.error("[Agent] Error:", err);
     return {
-      answer: "I encountered an error while processing your request. Please try again later.",
+      answer:
+        "I encountered an error while processing your request. Please try again later.",
       sources: null,
       toolUsed: null,
       toolsUsed: [],
@@ -223,7 +257,9 @@ export async function streamWebSearchRetrievalAgent(
   options: AgentOptions = {},
 ): Promise<AgentResponse> {
   const { sessionId } = options;
-  console.log(`[Agent] Streaming question: ${question}${sessionId ? ` (session: ${sessionId})` : ''}`);
+  console.log(
+    `[Agent] Streaming question: ${question}${sessionId ? ` (session: ${sessionId})` : ""}`,
+  );
   const { onTextDelta } = handlers;
 
   const history = sessionId ? getHistory(sessionId) : [];
@@ -250,8 +286,8 @@ export async function streamWebSearchRetrievalAgent(
   const answer = text || "I couldn't generate a response.";
 
   if (sessionId) {
-    addTurn(sessionId, 'user', question);
-    addTurn(sessionId, 'assistant', answer);
+    addTurn(sessionId, "user", question);
+    addTurn(sessionId, "assistant", answer);
   }
 
   return {
