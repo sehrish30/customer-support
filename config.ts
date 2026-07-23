@@ -5,7 +5,7 @@ import { createGroq } from "@ai-sdk/groq";
 import { createClient } from "@supabase/supabase-js";
 import { wrapAISDK } from "langsmith/experimental/vercel";
 
-const googleApiKey = process.env.GOOGLEa_GENERATIVE_AI_API_KEY;
+const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 if (!googleApiKey) {
   throw new Error("Missing GOOGLE_GENERATIVE_AI_API_KEY environment variable");
 }
