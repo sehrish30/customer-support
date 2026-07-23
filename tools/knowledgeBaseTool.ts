@@ -1,9 +1,10 @@
 import { embed } from 'ai';
 import { google, supabase } from '../config.js';
 import { SIMILARITY_MATCH_COUNT, EMBEDDING_MODEL_NAME, EMBEDDING_DIMENSIONS } from '../constants.js';
+import { traceable } from 'langsmith/traceable';
 import type { RetrievedDocument } from '../types.js';
 
-export async function searchKnowledgeBase(query: string): Promise<RetrievedDocument[]> {
+async function _searchKnowledgeBase(query: string): Promise<RetrievedDocument[]> {
   console.log(`[KB] Query: ${query}`);
   try {
     const { embedding } = await embed({
@@ -35,3 +36,8 @@ export async function searchKnowledgeBase(query: string): Promise<RetrievedDocum
     return [];
   }
 }
+
+export const searchKnowledgeBase = traceable(
+  _searchKnowledgeBase,
+  { name: "searchKnowledgeBase", run_type: "retriever" },
+);

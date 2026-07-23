@@ -1,4 +1,5 @@
 import { WEB_SEARCH_MAX_RESULTS } from '../constants.js';
+import { traceable } from 'langsmith/traceable';
 import type { WebSource } from '../types.js';
 
 interface TavilyResult {
@@ -12,7 +13,7 @@ interface TavilyResponse {
   results: TavilyResult[];
 }
 
-export async function searchWeb(query: string): Promise<WebSource[]> {
+async function _searchWeb(query: string): Promise<WebSource[]> {
   console.log(`[WebSearch] Query: ${query}`);
   const apiKey = process.env.TAVILY_API_KEY;
   if (!apiKey) {
@@ -55,3 +56,8 @@ export async function searchWeb(query: string): Promise<WebSource[]> {
     return [];
   }
 }
+
+export const searchWeb = traceable(
+  _searchWeb,
+  { name: "searchWeb", run_type: "tool" },
+);

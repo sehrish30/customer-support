@@ -1,4 +1,3 @@
-import { generateText, streamText } from "ai";
 import {
   KNOWLEDGE_BASE_DESCRIPTION,
   ANSWERING_MODEL,
@@ -7,7 +6,8 @@ import {
 } from "./constants.js";
 import { getAnswerPrompt } from "./prompts.js";
 import { FEW_SHOT_EXAMPLES } from "./fewShotExamples.js";
-import { groq } from "./config.js";
+import { tracedModel, generateText, streamText } from "./config.js";
+import { traceable } from "langsmith/traceable";
 import { searchKnowledgeBase } from "./tools/knowledgeBaseTool.js";
 import { searchWeb } from "./tools/webSearchTool.js";
 import {
@@ -103,89 +103,95 @@ function classifyQuery(question: string): RouteDecision {
   return "kb-then-web";
 }
 
-async function classifyGitHubQuery(question: string): Promise<string | null> {
-  if (!isGitHubConfigured()) return null;
-  try {
-    const { text } = await generateText({
-      model: groq(ANSWERING_MODEL),
-      prompt: `Does this user message describe a bug, error, or something not working?
+const classifyGitHubQuery = traceable(
+  async function classifyGitHubQuery(question: string): Promise<string | null> {
+    if (!isGitHubConfigured()) return null;
+    try {
+      const { text } = await generateText({
+        model: tracedModel(ANSWERING_MODEL),
+        prompt: `Does this user message describe a bug, error, or something not working?
 If yes, reply with a short 2-4 word GitHub search query (just keywords, no punctuation).
 If no, reply with just the word "no".
 
 Message: "${question}"`,
-    });
-    const reply = text.trim().toLowerCase();
-    return reply === "no" ? null : text.trim();
-  } catch {
-    return null;
-  }
-}
+      });
+      const reply = text.trim().toLowerCase();
+      return reply === "no" ? null : text.trim();
+    } catch {
+      return null;
+    }
+  },
+  { name: "classifyGitHubQuery", run_type: "llm" },
+);
 
-async function retrieve(
-  question: string,
-): Promise<{ sources: AppSource[]; toolsUsed: string[] }> {
-  const sources: AppSource[] = [];
-  const toolsUsed: string[] = [];
-  const route = classifyQuery(question);
-  console.log(`[Agent] Route decision: ${route}`);
+const retrieve = traceable(
+  async function retrieve(
+    question: string,
+  ): Promise<{ sources: AppSource[]; toolsUsed: string[] }> {
+    const sources: AppSource[] = [];
+    const toolsUsed: string[] = [];
+    const route = classifyQuery(question);
+    console.log(`[Agent] Route decision: ${route}`);
 
-  const githubSearchQuery = await classifyGitHubQuery(question);
-  const githubPromise = githubSearchQuery
-    ? searchGitHubIssues(githubSearchQuery)
-    : Promise.resolve([] as GitHubSource[]);
+    const githubSearchQuery = await classifyGitHubQuery(question);
+    const githubPromise = githubSearchQuery
+      ? searchGitHubIssues(githubSearchQuery)
+      : Promise.resolve([] as GitHubSource[]);
 
-  if (route === "web") {
-    const [webSources, githubSources] = await Promise.all([
-      searchWeb(question),
-      githubPromise,
-    ]);
-    sources.push(...webSources, ...githubSources);
-    recordToolsUsed(toolsUsed, { webSources, githubSources });
-    return { sources, toolsUsed };
-  }
+    if (route === "web") {
+      const [webSources, githubSources] = await Promise.all([
+        searchWeb(question),
+        githubPromise,
+      ]);
+      sources.push(...webSources, ...githubSources);
+      recordToolsUsed(toolsUsed, { webSources, githubSources });
+      return { sources, toolsUsed };
+    }
 
-  if (route === "mixed") {
-    const [kbDocs, webSources, githubSources] = await Promise.all([
+    if (route === "mixed") {
+      const [kbDocs, webSources, githubSources] = await Promise.all([
+        searchKnowledgeBase(question),
+        searchWeb(question),
+        githubPromise,
+      ]);
+      const kbSources = toKbSources(kbDocs);
+      sources.push(...kbSources, ...webSources, ...githubSources);
+      recordToolsUsed(toolsUsed, { kbSources, webSources, githubSources });
+      return { sources, toolsUsed };
+    }
+
+    const [kbDocs, githubSources] = await Promise.all([
       searchKnowledgeBase(question),
-      searchWeb(question),
       githubPromise,
     ]);
     const kbSources = toKbSources(kbDocs);
-    sources.push(...kbSources, ...webSources, ...githubSources);
-    recordToolsUsed(toolsUsed, { kbSources, webSources, githubSources });
+    recordToolsUsed(toolsUsed, { kbSources, githubSources });
+
+    if (route === "kb") {
+      sources.push(...kbSources, ...githubSources);
+      return { sources, toolsUsed };
+    }
+
+    // kb-then-web
+    const bestKBScore = kbSources[0]?.similarity ?? 0;
+    if (bestKBScore < KB_SUFFICIENCY_THRESHOLD) {
+      console.log(
+        `[Agent] KB score ${bestKBScore.toFixed(2)} < threshold — running web search.`,
+      );
+      const webSources = await searchWeb(question);
+      sources.push(...kbSources, ...webSources, ...githubSources);
+      recordToolsUsed(toolsUsed, { webSources });
+    } else {
+      console.log(
+        `[Agent] KB score ${bestKBScore.toFixed(2)} sufficient — skipping web search.`,
+      );
+      sources.push(...kbSources, ...githubSources);
+    }
+
     return { sources, toolsUsed };
-  }
-
-  const [kbDocs, githubSources] = await Promise.all([
-    searchKnowledgeBase(question),
-    githubPromise,
-  ]);
-  const kbSources = toKbSources(kbDocs);
-  recordToolsUsed(toolsUsed, { kbSources, githubSources });
-
-  if (route === "kb") {
-    sources.push(...kbSources, ...githubSources);
-    return { sources, toolsUsed };
-  }
-
-  // kb-then-web
-  const bestKBScore = kbSources[0]?.similarity ?? 0;
-  if (bestKBScore < KB_SUFFICIENCY_THRESHOLD) {
-    console.log(
-      `[Agent] KB score ${bestKBScore.toFixed(2)} < threshold — running web search.`,
-    );
-    const webSources = await searchWeb(question);
-    sources.push(...kbSources, ...webSources, ...githubSources);
-    recordToolsUsed(toolsUsed, { webSources });
-  } else {
-    console.log(
-      `[Agent] KB score ${bestKBScore.toFixed(2)} sufficient — skipping web search.`,
-    );
-    sources.push(...kbSources, ...githubSources);
-  }
-
-  return { sources, toolsUsed };
-}
+  },
+  { name: "retrieve", run_type: "retriever" },
+);
 
 function buildContext(sources: AppSource[]): string {
   return sources
@@ -201,7 +207,7 @@ function buildContext(sources: AppSource[]): string {
     .join("\n\n");
 }
 
-export async function webSearchRetrievalAgent(
+async function _webSearchRetrievalAgent(
   question: string,
   options: AgentOptions = {},
 ): Promise<AgentResponse> {
@@ -225,7 +231,7 @@ export async function webSearchRetrievalAgent(
 
     const { text } = await withRateLimit(() =>
       generateText({
-        model: groq(imageBase64 ? VISION_MODEL : ANSWERING_MODEL),
+        model: tracedModel(imageBase64 ? VISION_MODEL : ANSWERING_MODEL),
         system: getAnswerPrompt(KNOWLEDGE_BASE_DESCRIPTION),
         messages: [
           ...FEW_SHOT_EXAMPLES,
@@ -264,7 +270,12 @@ export async function webSearchRetrievalAgent(
   }
 }
 
-export async function streamWebSearchRetrievalAgent(
+export const webSearchRetrievalAgent = traceable(
+  _webSearchRetrievalAgent,
+  { name: "webSearchRetrievalAgent", run_type: "chain" },
+);
+
+async function _streamWebSearchRetrievalAgent(
   question: string,
   handlers: StreamHandlers = {},
   options: AgentOptions = {},
@@ -289,7 +300,7 @@ export async function streamWebSearchRetrievalAgent(
 
   const result = await withRateLimit(() =>
     streamText({
-      model: groq(imageBase64 ? VISION_MODEL : ANSWERING_MODEL),
+      model: tracedModel(imageBase64 ? VISION_MODEL : ANSWERING_MODEL),
       system: getAnswerPrompt(KNOWLEDGE_BASE_DESCRIPTION),
       messages: [
         ...FEW_SHOT_EXAMPLES,
@@ -322,3 +333,8 @@ export async function streamWebSearchRetrievalAgent(
     hasSummary: sessionId ? !!getSummary(sessionId) : false,
   };
 }
+
+export const streamWebSearchRetrievalAgent = traceable(
+  _streamWebSearchRetrievalAgent,
+  { name: "streamWebSearchRetrievalAgent", run_type: "chain" },
+);
